@@ -28,3 +28,8 @@ temp/
 # Private learning and workplace notes belong in the Obsidian vault, not this repository.
 *.md
 !README.md
+
+# Nx collects usage analytics to
+.nx/cache
+.nx/workspace-data
+.nx/migrate-runs

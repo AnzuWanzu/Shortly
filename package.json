@@ -1,0 +1,10 @@
+{
+  "name": "shortly",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.19.0",
+  "devDependencies": {
+    "nx": "23.1.1"
+  }
+}
