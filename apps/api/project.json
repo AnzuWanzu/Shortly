@@ -6,13 +6,13 @@
   "tags": [],
   "targets": {
     "typecheck": {
-    "executor": "nx:run-commands",
-    "cache": true,
-    "options": {
-      "cwd": "apps/api",
-      "command": "tsc -p tsconfig.app.json --noEmit"
-    }
-  },
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "cwd": "apps/api",
+        "command": "tsc -p tsconfig.app.json --noEmit"
+      }
+    },
     "prune-lockfile": {
       "dependsOn": ["build"],
       "cache": true,
