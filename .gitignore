@@ -35,3 +35,4 @@ temp/
 .nx/migrate-runs
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
+/apps/api/src/generated/prisma
