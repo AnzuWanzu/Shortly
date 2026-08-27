@@ -2,6 +2,12 @@ import { z } from 'zod';
 
 const envSchema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535).default(3333),
+
+  WEB_ORIGIN: z
+    .url({
+      protocol: /^https?$/,
+    })
+    .default('http://localhost:4200'),
 });
 
 export function parseEnv(input: NodeJS.ProcessEnv) {
