@@ -3,8 +3,9 @@
  * This is only a minimal backend to get started.
  */
 import app from './app';
+import { parseEnv } from './config/env';
 
-const port = process.env.PORT || 3333;
+const { PORT: port } = parseEnv(process.env);
 const server = app.listen(port, () => {
   console.log(`Listening at http://localhost:${port}/api`);
 });
