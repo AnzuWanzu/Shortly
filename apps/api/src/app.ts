@@ -9,11 +9,15 @@ type AppConfig = {
 export function createApp({ webOrigin }: AppConfig) {
   const app = express();
 
+  //API Hardening:
   app.disable('x-powered-by');
   app.use(helmet());
 
   app.use(cors({ origin: webOrigin }));
 
+  app.use(express.json({ limit: '10kb' }));
+
+  //Routes:
   app.get('/api', (req, res) => {
     res.send({ message: 'Welcome to api!' });
   });

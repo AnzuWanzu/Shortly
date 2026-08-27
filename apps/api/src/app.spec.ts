@@ -48,3 +48,15 @@ describe('security headers', () => {
     expect(response.headers['x-content-type-options']).toBe('nosniff');
   });
 });
+
+describe('request body limits', () => {
+  it('rejects JSON bodies larger than 10 KB', async () => {
+    const oversizedBody = {
+      content: 'x'.repeat(11 * 1024),
+    };
+
+    const response = await request(app).post('/health').send(oversizedBody);
+
+    expect(response.status).toBe(413);
+  });
+});
