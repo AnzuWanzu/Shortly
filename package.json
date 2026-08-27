@@ -23,6 +23,7 @@
     "@swc/helpers": "~0.5.18",
     "@testing-library/dom": "10.4.0",
     "@testing-library/react": "16.3.0",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
@@ -53,7 +54,9 @@
     "webpack-dev-server": "^5.2.1"
   },
   "dependencies": {
+    "cors": "^2.8.6",
     "express": "^5.1.0",
+    "helmet": "^8.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "zod": "^4.4.3"
