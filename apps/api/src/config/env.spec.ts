@@ -19,4 +19,26 @@ describe('parseEnv', () => {
       expect(() => parseEnv({ PORT: port })).toThrow();
     },
   );
+
+  it('uses the local web origin when WEB_ORIGIN is missing', () => {
+    const config = parseEnv({});
+
+    expect(config.WEB_ORIGIN).toBe('http://localhost:4200');
+  });
+
+  it('accepts a configured web origin', () => {
+    const config = parseEnv({
+      WEB_ORIGIN: 'https://shortly.example',
+    });
+
+    expect(config.WEB_ORIGIN).toBe('https://shortly.example');
+  });
+
+  it('rejects an invalid web origin', () => {
+    expect(() =>
+      parseEnv({
+        WEB_ORIGIN: 'definitely-not-a-url',
+      }),
+    ).toThrow();
+  });
 });
