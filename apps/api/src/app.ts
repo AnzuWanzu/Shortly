@@ -1,16 +1,26 @@
 import express from 'express';
-import * as path from 'path';
+import cors from 'cors';
+import helmet from 'helmet';
 
-const app = express();
+type AppConfig = {
+  webOrigin: string;
+};
 
-app.use('/assets', express.static(path.join(__dirname, 'assets')));
+export function createApp({ webOrigin }: AppConfig) {
+  const app = express();
 
-app.get('/api', (req, res) => {
-  res.send({ message: 'Welcome to api!' });
-});
+  app.disable('x-powered-by');
+  app.use(helmet());
 
-app.get('/health', (_req, res) => {
-  res.status(200).json({ status: 'ok' });
-});
+  app.use(cors({ origin: webOrigin }));
 
-export default app;
+  app.get('/api', (req, res) => {
+    res.send({ message: 'Welcome to api!' });
+  });
+
+  app.get('/health', (_req, res) => {
+    res.status(200).json({ status: 'ok' });
+  });
+
+  return app;
+}
