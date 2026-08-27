@@ -1,8 +1,10 @@
 allowBuilds:
   nx: true
-  "@swc/core": false
+  '@swc/core': false
   esbuild: false
   unrs-resolver: false
   '@parcel/watcher': false
   core-js-pure: false
   less: false
+  '@prisma/engines': true
+  prisma: true
