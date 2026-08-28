@@ -8,6 +8,10 @@ const envSchema = z.object({
       protocol: /^https?$/,
     })
     .default('http://localhost:4200'),
+
+  DATABASE_URL: z.url({
+    protocol: /^postgresql$/,
+  }),
 });
 
 export function parseEnv(input: NodeJS.ProcessEnv) {
