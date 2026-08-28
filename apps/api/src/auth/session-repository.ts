@@ -33,29 +33,44 @@ type PrismaDeleteSessions = (args: {
 }) => Promise<{ count: number }>;
 
 export function createCreateSessionRepository(
-  _prismaCreateSession: PrismaCreateSession,
+  prismaCreateSession: PrismaCreateSession,
 ) {
   return async function createSession(
-    _input: CreateSessionInput,
+    input: CreateSessionInput,
   ): Promise<void> {
-    throw new Error('Not implemented');
+    await prismaCreateSession({ data: input });
   };
 }
 
 export function createFindSessionRepository(
-  _prismaFindSession: PrismaFindSession,
+  prismaFindSession: PrismaFindSession,
 ) {
   return async function findSession(
-    _tokenHash: string,
+    tokenHash: string,
   ): Promise<StoredSession | null> {
-    throw new Error('Not implemented');
+    return prismaFindSession({
+      where: { tokenHash },
+      select: {
+        id: true,
+        tokenHash: true,
+        expiresAt: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+            displayName: true,
+            createdAt: true,
+          },
+        },
+      },
+    });
   };
 }
 
 export function createDeleteSessionRepository(
-  _prismaDeleteSessions: PrismaDeleteSessions,
+  prismaDeleteSessions: PrismaDeleteSessions,
 ) {
-  return async function deleteSession(_tokenHash: string): Promise<void> {
-    throw new Error('Not implemented');
+  return async function deleteSession(tokenHash: string): Promise<void> {
+    await prismaDeleteSessions({ where: { tokenHash } });
   };
 }

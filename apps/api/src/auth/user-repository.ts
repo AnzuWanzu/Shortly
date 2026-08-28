@@ -58,12 +58,21 @@ export function createUserRepository(prismaCreateUser: PrismaCreateUser) {
 }
 
 export function createFindUserByEmailRepository(
-  _prismaFindUser: PrismaFindUser,
+  prismaFindUser: PrismaFindUser,
 ) {
   return async function findUserByEmail(
-    _email: string,
+    email: string,
   ): Promise<LoginUserRecord | null> {
-    throw new Error('Not implemented');
+    return prismaFindUser({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        displayName: true,
+        passwordHash: true,
+        createdAt: true,
+      },
+    });
   };
 }
 
