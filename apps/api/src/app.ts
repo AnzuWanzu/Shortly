@@ -4,9 +4,10 @@ import helmet from 'helmet';
 
 type AppConfig = {
   webOrigin: string;
+  checkDatabase: () => Promise<void>;
 };
 
-export function createApp({ webOrigin }: AppConfig) {
+export function createApp({ webOrigin, checkDatabase }: AppConfig) {
   const app = express();
 
   //API Hardening:
@@ -24,6 +25,15 @@ export function createApp({ webOrigin }: AppConfig) {
 
   app.get('/health', (_req, res) => {
     res.status(200).json({ status: 'ok' });
+  });
+
+  app.get('/ready', async (_req, res) => {
+    try {
+      await checkDatabase();
+      res.status(200).json({ status: 'ready' });
+    } catch {
+      res.status(503).json({ status: 'not_ready' });
+    }
   });
 
   return app;
