@@ -2,7 +2,11 @@ import request from 'supertest';
 import { createApp } from './app';
 
 const webOrigin = 'http://localhost:4200';
-const app = createApp({ webOrigin });
+const alwaysAvailableDatabase = async () => undefined;
+const app = createApp({
+  webOrigin,
+  checkDatabase: alwaysAvailableDatabase,
+});
 
 describe('GET /health', () => {
   it('returns the service health status', async () => {
@@ -58,5 +62,36 @@ describe('request body limits', () => {
     const response = await request(app).post('/health').send(oversizedBody);
 
     expect(response.status).toBe(413);
+  });
+});
+
+describe('GET /ready', () => {
+  it('returns ready when the database check succeeds', async () => {
+    const databaseAvailable = async () => undefined;
+
+    const readyApp = createApp({
+      webOrigin,
+      checkDatabase: databaseAvailable,
+    });
+
+    const response = await request(readyApp).get('/ready');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ status: 'ready' });
+  });
+  it('returns not ready when the database check fails', async () => {
+    const databaseUnavailable = async () => {
+      throw new Error('Database unavailable');
+    };
+
+    const unavailableApp = createApp({
+      webOrigin,
+      checkDatabase: databaseUnavailable,
+    });
+
+    const response = await request(unavailableApp).get('/ready');
+
+    expect(response.status).toBe(503);
+    expect(response.body).toEqual({ status: 'not_ready' });
   });
 });
