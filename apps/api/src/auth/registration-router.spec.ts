@@ -58,10 +58,12 @@ describe('POST /auth/register', () => {
     const registerUser = vi.fn<RegisterUser>();
     const app = createTestApp(registerUser);
 
-    const response = await request(app).post('/auth/register').send({
-      ...validRegistration,
-      isAdmin: true,
-    });
+    const response = await request(app)
+      .post('/auth/register')
+      .send({
+        ...validRegistration,
+        isAdmin: true,
+      });
 
     expect(response.status).toBe(400);
     expect(response.body).toMatchObject({

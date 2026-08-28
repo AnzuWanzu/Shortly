@@ -9,7 +9,7 @@ describe('registerUser', () => {
       password: 'i am not a chud',
     };
 
-    const hashPassword = vi.fn(async (_password: string) => {
+    const hashPassword = vi.fn(async () => {
       return 'stored-password-hash';
     });
 
