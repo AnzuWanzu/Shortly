@@ -23,6 +23,8 @@ export type LoginResult = {
   expiresAt: Date;
 };
 
+export type LoginUser = (input: LoginInput) => Promise<LoginResult>;
+
 type LoginDependencies = {
   findUserByEmail: (email: string) => Promise<LoginUserRecord | null>;
   verifyPassword: (
