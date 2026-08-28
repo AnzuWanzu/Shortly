@@ -1,6 +1,9 @@
 import { vi } from 'vitest';
 import { EmailAlreadyExistsError } from './auth-errors';
-import { createUserRepository } from './user-repository';
+import {
+  createFindUserByEmailRepository,
+  createUserRepository,
+} from './user-repository';
 
 describe('createUserRepository', () => {
   it('passes user data and a safe field selection to Prisma', async () => {
@@ -50,5 +53,33 @@ describe('createUserRepository', () => {
         passwordHash: 'stored-password-hash',
       }),
     ).rejects.toBeInstanceOf(EmailAlreadyExistsError);
+  });
+});
+
+describe('createFindUserByEmailRepository', () => {
+  it('looks up a normalized email and deliberately selects the password hash', async () => {
+    const storedUser = {
+      id: 'user-123',
+      email: 'anzu@example.com',
+      displayName: 'Anzu',
+      passwordHash: 'stored-password-hash',
+      createdAt: new Date('2026-08-28T00:00:00.000Z'),
+    };
+    const prismaFindUser = vi.fn(async () => storedUser);
+    const findUserByEmail = createFindUserByEmailRepository(prismaFindUser);
+
+    await expect(findUserByEmail(storedUser.email)).resolves.toEqual(
+      storedUser,
+    );
+    expect(prismaFindUser).toHaveBeenCalledWith({
+      where: { email: storedUser.email },
+      select: {
+        id: true,
+        email: true,
+        displayName: true,
+        passwordHash: true,
+        createdAt: true,
+      },
+    });
   });
 });

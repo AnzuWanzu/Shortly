@@ -1,4 +1,5 @@
 import type { CreatedUser, CreateUserInput } from './registration-service';
+import type { LoginUserRecord } from './login-service';
 import { EmailAlreadyExistsError } from './auth-errors';
 
 type SafeUserSelection = {
@@ -14,6 +15,23 @@ type PrismaCreateUserArgs = {
 };
 
 type PrismaCreateUser = (args: PrismaCreateUserArgs) => Promise<CreatedUser>;
+
+type LoginUserSelection = {
+  id: true;
+  email: true;
+  displayName: true;
+  passwordHash: true;
+  createdAt: true;
+};
+
+type PrismaFindUserArgs = {
+  where: { email: string };
+  select: LoginUserSelection;
+};
+
+type PrismaFindUser = (
+  args: PrismaFindUserArgs,
+) => Promise<LoginUserRecord | null>;
 
 export function createUserRepository(prismaCreateUser: PrismaCreateUser) {
   return async function createUser(
@@ -36,6 +54,16 @@ export function createUserRepository(prismaCreateUser: PrismaCreateUser) {
 
       throw error;
     }
+  };
+}
+
+export function createFindUserByEmailRepository(
+  _prismaFindUser: PrismaFindUser,
+) {
+  return async function findUserByEmail(
+    _email: string,
+  ): Promise<LoginUserRecord | null> {
+    throw new Error('Not implemented');
   };
 }
 
