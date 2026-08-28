@@ -5,6 +5,14 @@
   "projectType": "application",
   "tags": [],
   "targets": {
+    "integration": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "apps/api",
+        "command": "vitest run --config vitest.integration.config.mts"
+      }
+    },
     "typecheck": {
       "executor": "nx:run-commands",
       "cache": true,
