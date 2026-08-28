@@ -4,3 +4,10 @@ export class EmailAlreadyExistsError extends Error {
     this.name = 'EmailAlreadyExistsError';
   }
 }
+
+export class InvalidCredentialsError extends Error {
+  constructor() {
+    super('Email or password is incorrect');
+    this.name = 'InvalidCredentialsError';
+  }
+}
