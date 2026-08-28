@@ -1,15 +1,22 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import type { RegisterUser } from './auth/registration-router';
+import {
+  createRegistrationRouter,
+  type RegisterUser,
+} from './auth/registration-router';
 
 type AppConfig = {
   webOrigin: string;
   checkDatabase: () => Promise<void>;
-  registerUser?: RegisterUser;
+  registerUser: RegisterUser;
 };
 
-export function createApp({ webOrigin, checkDatabase }: AppConfig) {
+export function createApp({
+  webOrigin,
+  checkDatabase,
+  registerUser,
+}: AppConfig) {
   const app = express();
 
   //API Hardening:
@@ -21,6 +28,8 @@ export function createApp({ webOrigin, checkDatabase }: AppConfig) {
   app.use(express.json({ limit: '10kb' }));
 
   //Routes:
+  app.use('/auth', createRegistrationRouter({ registerUser }));
+
   app.get('/api', (req, res) => {
     res.send({ message: 'Welcome to api!' });
   });

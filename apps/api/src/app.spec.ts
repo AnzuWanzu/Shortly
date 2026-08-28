@@ -5,9 +5,13 @@ import type { RegisterUser } from './auth/registration-router';
 
 const webOrigin = 'http://localhost:4200';
 const alwaysAvailableDatabase = async () => undefined;
+const unusedRegisterUser: RegisterUser = async () => {
+  throw new Error('Registration was not expected in this test');
+};
 const app = createApp({
   webOrigin,
   checkDatabase: alwaysAvailableDatabase,
+  registerUser: unusedRegisterUser,
 });
 
 describe('GET /health', () => {
@@ -74,6 +78,7 @@ describe('GET /ready', () => {
     const readyApp = createApp({
       webOrigin,
       checkDatabase: databaseAvailable,
+      registerUser: unusedRegisterUser,
     });
 
     const response = await request(readyApp).get('/ready');
@@ -89,6 +94,7 @@ describe('GET /ready', () => {
     const unavailableApp = createApp({
       webOrigin,
       checkDatabase: databaseUnavailable,
+      registerUser: unusedRegisterUser,
     });
 
     const response = await request(unavailableApp).get('/ready');
