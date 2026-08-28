@@ -1,5 +1,7 @@
 import request from 'supertest';
+import { vi } from 'vitest';
 import { createApp } from './app';
+import type { RegisterUser } from './auth/registration-router';
 
 const webOrigin = 'http://localhost:4200';
 const alwaysAvailableDatabase = async () => undefined;
@@ -93,5 +95,40 @@ describe('GET /ready', () => {
 
     expect(response.status).toBe(503);
     expect(response.body).toEqual({ status: 'not_ready' });
+  });
+});
+
+describe('authentication routes', () => {
+  it('mounts user registration under /auth', async () => {
+    const createdAt = new Date('2026-08-28T00:00:00.000Z');
+    const registerUser = vi.fn<RegisterUser>(async (input) => ({
+      id: 'user-123',
+      email: input.email,
+      displayName: input.displayName,
+      createdAt,
+    }));
+    const registrationApp = createApp({
+      webOrigin,
+      checkDatabase: alwaysAvailableDatabase,
+      registerUser,
+    });
+
+    const response = await request(registrationApp)
+      .post('/auth/register')
+      .send({
+        email: 'anzu@example.com',
+        displayName: 'Anzu',
+        password: 'correct horse battery staple',
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body).toEqual({
+      user: {
+        id: 'user-123',
+        email: 'anzu@example.com',
+        displayName: 'Anzu',
+        createdAt: createdAt.toISOString(),
+      },
+    });
   });
 });

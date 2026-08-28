@@ -1,10 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import type { RegisterUser } from './auth/registration-router';
 
 type AppConfig = {
   webOrigin: string;
   checkDatabase: () => Promise<void>;
+  registerUser?: RegisterUser;
 };
 
 export function createApp({ webOrigin, checkDatabase }: AppConfig) {
