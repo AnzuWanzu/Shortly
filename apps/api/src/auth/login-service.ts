@@ -1,4 +1,5 @@
 import type { LoginInput } from './login-schema';
+import { InvalidCredentialsError } from './auth-errors';
 
 export type LoginUserRecord = {
   id: string;
@@ -36,8 +37,40 @@ type LoginDependencies = {
   dummyPasswordHash: string;
 };
 
-export function createLoginUser(_dependencies: LoginDependencies) {
-  return async function loginUser(_input: LoginInput): Promise<LoginResult> {
-    throw new Error('Not implemented');
+export function createLoginUser(dependencies: LoginDependencies) {
+  return async function loginUser(input: LoginInput): Promise<LoginResult> {
+    const user = await dependencies.findUserByEmail(input.email);
+    const passwordHash = user?.passwordHash ?? dependencies.dummyPasswordHash;
+    const passwordMatches = await dependencies.verifyPassword(
+      passwordHash,
+      input.password,
+    );
+
+    if (!user || !passwordMatches) {
+      throw new InvalidCredentialsError();
+    }
+
+    const token = dependencies.createSessionToken();
+    const tokenHash = dependencies.hashSessionToken(token);
+    const expiresAt = new Date(
+      dependencies.now().getTime() + dependencies.sessionDurationMs,
+    );
+
+    await dependencies.createSession({
+      userId: user.id,
+      tokenHash,
+      expiresAt,
+    });
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        displayName: user.displayName,
+        createdAt: user.createdAt,
+      },
+      token,
+      expiresAt,
+    };
   };
 }
