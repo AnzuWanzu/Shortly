@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+import { EmailAlreadyExistsError } from './auth-errors';
 import { createUserRepository } from './user-repository';
 
 describe('createUserRepository', () => {
@@ -31,5 +32,23 @@ describe('createUserRepository', () => {
         createdAt: true,
       },
     });
+  });
+
+  it('translates a Prisma unique constraint into an email conflict', async () => {
+    const prismaError = Object.assign(new Error('Unique constraint failed'), {
+      code: 'P2002',
+    });
+    const prismaCreateUser = vi.fn(async () => {
+      throw prismaError;
+    });
+    const createUser = createUserRepository(prismaCreateUser);
+
+    await expect(
+      createUser({
+        email: 'anzu@example.com',
+        displayName: 'Anzu',
+        passwordHash: 'stored-password-hash',
+      }),
+    ).rejects.toBeInstanceOf(EmailAlreadyExistsError);
   });
 });
