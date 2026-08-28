@@ -1,12 +1,12 @@
 import type { RegistrationInput } from './registration-schema';
 
-type CreateUserInput = {
+export type CreateUserInput = {
   email: string;
   displayName: string;
   passwordHash: string;
 };
 
-type CreatedUser = {
+export type CreatedUser = {
   id: string;
   email: string;
   displayName: string;
