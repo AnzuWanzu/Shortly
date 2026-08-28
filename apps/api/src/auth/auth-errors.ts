@@ -11,3 +11,10 @@ export class InvalidCredentialsError extends Error {
     this.name = 'InvalidCredentialsError';
   }
 }
+
+export class UnauthenticatedError extends Error {
+  constructor() {
+    super('Authentication is required');
+    this.name = 'UnauthenticatedError';
+  }
+}
