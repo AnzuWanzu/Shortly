@@ -1,5 +1,5 @@
 import type { AuthenticatedUser } from '../login/login-service';
-import type { StoredSession } from '../session-repository';
+import type { StoredSession } from '../persistence/session-repository';
 import { UnauthenticatedError } from '../shared/auth-errors';
 
 type SessionDependencies = {

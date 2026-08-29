@@ -1,7 +1,7 @@
 import type {
   AuthenticatedUser,
   CreateSessionInput,
-} from './login/login-service';
+} from '../login/login-service';
 
 export type StoredSession = {
   id: string;

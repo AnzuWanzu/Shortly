@@ -4,7 +4,7 @@ import {
   hashPassword,
   verifyPassword,
 } from '../../src/auth/shared/password-hasher';
-import { createUserRepository } from '../../src/auth/user-repository';
+import { createUserRepository } from '../../src/auth/persistence/user-repository';
 import { createPrismaClient } from '../../src/database/prisma';
 
 const databaseUrl = process.env['DATABASE_URL_TEST'];
