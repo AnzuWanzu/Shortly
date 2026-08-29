@@ -9,7 +9,7 @@ import {
   CSRF_HEADER_VALUE,
   SESSION_COOKIE_NAME,
 } from '../../auth/session/session-router';
-import { LinkNotFoundError } from '../link-errors';
+import { LinkNotFoundError } from '../shared/link-errors';
 import {
   createLinkRouter,
   type CreateOwnedLink,
