@@ -50,7 +50,7 @@ it('searches and deletes an owned link after confirmation', async () => {
   );
 
   const search = await screen.findByLabelText('Search links');
-  expect(screen.getByText(firstLink.originalUrl)).toBeInTheDocument();
+  expect(await screen.findByText(firstLink.originalUrl)).toBeInTheDocument();
 
   await user.type(search, 'medium');
   expect(screen.queryByText(firstLink.originalUrl)).not.toBeInTheDocument();
