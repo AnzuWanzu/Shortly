@@ -5,11 +5,17 @@ import {
   createRegistrationRouter,
   type RegisterUser,
 } from './auth/registration-router';
+import type { LoginUser } from './auth/login-service';
+import type { AuthenticateSession, LogoutUser } from './auth/session-service';
 
 type AppConfig = {
   webOrigin: string;
   checkDatabase: () => Promise<void>;
   registerUser: RegisterUser;
+  loginUser?: LoginUser;
+  authenticateSession?: AuthenticateSession;
+  logoutUser?: LogoutUser;
+  secureCookies?: boolean;
 };
 
 export function createApp({

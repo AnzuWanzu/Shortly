@@ -2,6 +2,9 @@ import request from 'supertest';
 import { vi } from 'vitest';
 import { createApp } from './app';
 import type { RegisterUser } from './auth/registration-router';
+import type { LoginUser } from './auth/login-service';
+import { CSRF_HEADER_NAME, CSRF_HEADER_VALUE } from './auth/session-router';
+import type { AuthenticateSession, LogoutUser } from './auth/session-service';
 
 const webOrigin = 'http://localhost:4200';
 const alwaysAvailableDatabase = async () => undefined;
@@ -28,6 +31,7 @@ describe('CORS', () => {
     const response = await request(app).get('/health').set('Origin', webOrigin);
 
     expect(response.headers['access-control-allow-origin']).toBe(webOrigin);
+    expect(response.headers['access-control-allow-credentials']).toBe('true');
   });
 
   it('does not grant browser access to another origin', async () => {
@@ -135,6 +139,41 @@ describe('authentication routes', () => {
         displayName: 'Anzu',
         createdAt: createdAt.toISOString(),
       },
+    });
+  });
+
+  it('mounts login and session routes under /auth', async () => {
+    const user = {
+      id: 'user-123',
+      email: 'anzu@example.com',
+      displayName: 'Anzu',
+      createdAt: new Date('2026-08-28T00:00:00.000Z'),
+    };
+    const loginUser = vi.fn<LoginUser>(async () => ({
+      user,
+      token: 'raw-session-token',
+      expiresAt: new Date('2026-09-04T00:00:00.000Z'),
+    }));
+    const authenticateSession = vi.fn<AuthenticateSession>(async () => user);
+    const logoutUser = vi.fn<LogoutUser>(async () => undefined);
+    const sessionApp = createApp({
+      webOrigin,
+      checkDatabase: alwaysAvailableDatabase,
+      registerUser: unusedRegisterUser,
+      loginUser,
+      authenticateSession,
+      logoutUser,
+      secureCookies: false,
+    });
+
+    const response = await request(sessionApp)
+      .post('/auth/login')
+      .set(CSRF_HEADER_NAME, CSRF_HEADER_VALUE)
+      .send({ email: 'anzu@example.com', password: 'password' });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      user: { ...user, createdAt: user.createdAt.toISOString() },
     });
   });
 });
