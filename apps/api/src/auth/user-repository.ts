@@ -2,7 +2,7 @@ import type {
   CreatedUser,
   CreateUserInput,
 } from './registration/registration-service';
-import type { LoginUserRecord } from './login-service';
+import type { LoginUserRecord } from './login/login-service';
 import { EmailAlreadyExistsError } from './auth-errors';
 
 type SafeUserSelection = {

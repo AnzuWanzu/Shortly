@@ -1,5 +1,5 @@
 import { createApp } from './app';
-import { composeLogin } from './auth/login-composition';
+import { composeLogin } from './auth/login/login-composition';
 import { composeRegistration } from './auth/registration/registration-composition';
 import { composeSession } from './auth/session-composition';
 import { parseEnv } from './config/env';

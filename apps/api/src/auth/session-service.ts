@@ -1,4 +1,4 @@
-import type { AuthenticatedUser } from './login-service';
+import type { AuthenticatedUser } from './login/login-service';
 import type { StoredSession } from './session-repository';
 import { UnauthenticatedError } from './auth-errors';
 

@@ -6,7 +6,7 @@ import {
   createRegistrationRouter,
   type RegisterUser,
 } from './auth/registration/registration-router';
-import type { LoginUser } from './auth/login-service';
+import type { LoginUser } from './auth/login/login-service';
 import type { AuthenticateSession, LogoutUser } from './auth/session-service';
 import { CSRF_HEADER_NAME, createSessionRouter } from './auth/session-router';
 import {
