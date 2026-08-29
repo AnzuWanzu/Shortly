@@ -1,7 +1,7 @@
-import type { createPrismaClient } from '../database/prisma';
-import { hashPassword } from './password-hasher';
+import type { createPrismaClient } from '../../database/prisma';
+import { hashPassword } from '../password-hasher';
 import { createRegisterUser } from './registration-service';
-import { createUserRepository } from './user-repository';
+import { createUserRepository } from '../user-repository';
 
 type PrismaClient = ReturnType<typeof createPrismaClient>;
 

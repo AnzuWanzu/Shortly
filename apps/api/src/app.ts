@@ -5,7 +5,7 @@ import helmet from 'helmet';
 import {
   createRegistrationRouter,
   type RegisterUser,
-} from './auth/registration-router';
+} from './auth/registration/registration-router';
 import type { LoginUser } from './auth/login-service';
 import type { AuthenticateSession, LogoutUser } from './auth/session-service';
 import { CSRF_HEADER_NAME, createSessionRouter } from './auth/session-router';

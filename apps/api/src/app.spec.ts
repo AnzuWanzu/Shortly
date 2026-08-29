@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { vi } from 'vitest';
 import { createApp } from './app';
-import type { RegisterUser } from './auth/registration-router';
+import type { RegisterUser } from './auth/registration/registration-router';
 import type { LoginUser } from './auth/login-service';
 import {
   CSRF_HEADER_NAME,

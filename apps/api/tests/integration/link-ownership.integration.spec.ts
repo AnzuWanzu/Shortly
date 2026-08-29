@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import request from 'supertest';
 import { createApp } from '../../src/app';
 import { composeLogin } from '../../src/auth/login-composition';
-import { composeRegistration } from '../../src/auth/registration-composition';
+import { composeRegistration } from '../../src/auth/registration/registration-composition';
 import { composeSession } from '../../src/auth/session-composition';
 import {
   CSRF_HEADER_NAME,

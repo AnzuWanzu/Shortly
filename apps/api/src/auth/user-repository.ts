@@ -1,4 +1,7 @@
-import type { CreatedUser, CreateUserInput } from './registration-service';
+import type {
+  CreatedUser,
+  CreateUserInput,
+} from './registration/registration-service';
 import type { LoginUserRecord } from './login-service';
 import { EmailAlreadyExistsError } from './auth-errors';
 
