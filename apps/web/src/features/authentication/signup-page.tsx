@@ -1,8 +1,11 @@
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 
 import { AuthLayout } from '../../components/layout/auth-layout';
+import { SignupForm } from './signup-form';
 
 export function SignupPage() {
+  const navigate = useNavigate();
+
   return (
     <AuthLayout>
       <p className="text-xs font-bold uppercase tracking-[0.18em] text-violet">
@@ -14,6 +17,14 @@ export function SignupPage() {
       <p className="mt-3 text-sm leading-6 text-muted">
         Start shortening and managing the links you use most.
       </p>
+      <SignupForm
+        onRegistered={() => {
+          navigate('/login', {
+            replace: true,
+            state: { message: 'Account created' },
+          });
+        }}
+      />
       <p className="mt-8 text-sm text-muted">
         Already registered?{' '}
         <Link className="font-semibold text-violet hover:underline" to="/login">
