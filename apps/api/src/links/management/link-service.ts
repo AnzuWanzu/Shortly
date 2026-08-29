@@ -1,22 +1,9 @@
-import type { CreateLinkRequest } from './link-schema';
-import { SlugAlreadyExistsError } from './link-errors';
-
-export type LinkRecord = {
-  id: string;
-  slug: string;
-  originalUrl: string;
-  userId: string;
-  createdAt: Date;
-};
-
-export type CreateLinkRecordInput = CreateLinkRequest & {
-  slug: string;
-  userId: string;
-};
-
-export type CreateOwnedLinkInput = CreateLinkRequest & {
-  userId: string;
-};
+import { SlugAlreadyExistsError } from '../shared/link-errors';
+import type {
+  CreateLinkRecordInput,
+  CreateOwnedLinkInput,
+  LinkRecord,
+} from '../shared/link-types';
 
 type CreateOwnedLinkDependencies = {
   createLinkRecord: (input: CreateLinkRecordInput) => Promise<LinkRecord>;

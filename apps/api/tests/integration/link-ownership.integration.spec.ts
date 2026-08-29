@@ -9,7 +9,7 @@ import {
   CSRF_HEADER_VALUE,
 } from '../../src/auth/session/session-router';
 import { createPrismaClient } from '../../src/database/prisma';
-import { composeLinks } from '../../src/links/link-composition';
+import { composeLinks } from '../../src/links/management/link-composition';
 
 const databaseUrl = process.env['DATABASE_URL_TEST'];
 

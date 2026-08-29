@@ -4,7 +4,7 @@ import { composeRegistration } from './auth/registration/registration-compositio
 import { composeSession } from './auth/session/session-composition';
 import { parseEnv } from './config/env';
 import { createPrismaClient } from './database/prisma';
-import { composeLinks } from './links/link-composition';
+import { composeLinks } from './links/management/link-composition';
 
 const {
   PORT: port,

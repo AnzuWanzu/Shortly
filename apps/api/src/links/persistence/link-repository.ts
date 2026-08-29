@@ -1,5 +1,8 @@
-import type { CreateLinkRecordInput, LinkRecord } from './link-service';
-import { LinkNotFoundError, SlugAlreadyExistsError } from './link-errors';
+import {
+  LinkNotFoundError,
+  SlugAlreadyExistsError,
+} from '../shared/link-errors';
+import type { CreateLinkRecordInput, LinkRecord } from '../shared/link-types';
 
 const linkSelection = {
   id: true,

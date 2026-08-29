@@ -1,5 +1,8 @@
 import { vi } from 'vitest';
-import { LinkNotFoundError, SlugAlreadyExistsError } from './link-errors';
+import {
+  LinkNotFoundError,
+  SlugAlreadyExistsError,
+} from '../shared/link-errors';
 import {
   createLinkRecordRepository,
   createListOwnedLinksRepository,

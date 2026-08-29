@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import { SlugAlreadyExistsError } from './link-errors';
+import { SlugAlreadyExistsError } from '../shared/link-errors';
 import { createCreateOwnedLink } from './link-service';
 
 describe('createOwnedLink', () => {
