@@ -1,6 +1,9 @@
 import { randomUUID } from 'node:crypto';
-import { EmailAlreadyExistsError } from '../../src/auth/auth-errors';
-import { hashPassword, verifyPassword } from '../../src/auth/password-hasher';
+import { EmailAlreadyExistsError } from '../../src/auth/shared/auth-errors';
+import {
+  hashPassword,
+  verifyPassword,
+} from '../../src/auth/shared/password-hasher';
 import { createUserRepository } from '../../src/auth/user-repository';
 import { createPrismaClient } from '../../src/database/prisma';
 

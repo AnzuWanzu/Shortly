@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from 'express';
-import { UnauthenticatedError } from '../auth/auth-errors';
+import { UnauthenticatedError } from '../auth/shared/auth-errors';
 import {
   readSessionCookie,
   requireCsrfHeader,

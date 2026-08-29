@@ -2,7 +2,7 @@ import cookieParser from 'cookie-parser';
 import express from 'express';
 import request from 'supertest';
 import { vi } from 'vitest';
-import { UnauthenticatedError } from '../auth/auth-errors';
+import { UnauthenticatedError } from '../auth/shared/auth-errors';
 import type { AuthenticateSession } from '../auth/session/session-service';
 import {
   CSRF_HEADER_NAME,

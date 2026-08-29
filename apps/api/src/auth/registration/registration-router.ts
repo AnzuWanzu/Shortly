@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { EmailAlreadyExistsError } from '../auth-errors';
+import { EmailAlreadyExistsError } from '../shared/auth-errors';
 import { registrationSchema } from './registration-schema';
 import type { RegistrationInput } from './registration-schema';
 import type { CreatedUser } from './registration-service';

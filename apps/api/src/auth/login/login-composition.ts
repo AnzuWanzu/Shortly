@@ -1,5 +1,5 @@
 import type { createPrismaClient } from '../../database/prisma';
-import { DUMMY_PASSWORD_HASH, verifyPassword } from '../password-hasher';
+import { DUMMY_PASSWORD_HASH, verifyPassword } from '../shared/password-hasher';
 import { SESSION_DURATION_MS, createLoginUser } from './login-service';
 import { createCreateSessionRepository } from '../session-repository';
 import { createSessionToken, hashSessionToken } from '../session/session-token';

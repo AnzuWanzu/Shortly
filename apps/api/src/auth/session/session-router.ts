@@ -1,6 +1,9 @@
 import { Router } from 'express';
 import type { CookieOptions, Request, Response } from 'express';
-import { InvalidCredentialsError, UnauthenticatedError } from '../auth-errors';
+import {
+  InvalidCredentialsError,
+  UnauthenticatedError,
+} from '../shared/auth-errors';
 import { loginSchema } from '../login/login-schema';
 import type { LoginUser } from '../login/login-service';
 import type { AuthenticateSession, LogoutUser } from './session-service';

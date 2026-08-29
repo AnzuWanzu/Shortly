@@ -3,7 +3,7 @@ import type {
   CreateUserInput,
 } from './registration/registration-service';
 import type { LoginUserRecord } from './login/login-service';
-import { EmailAlreadyExistsError } from './auth-errors';
+import { EmailAlreadyExistsError } from './shared/auth-errors';
 
 type SafeUserSelection = {
   id: true;
