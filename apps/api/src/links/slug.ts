@@ -1,3 +1,5 @@
+import { randomBytes } from 'node:crypto';
+
 export function createSlug(): string {
-  throw new Error('Not implemented');
+  return randomBytes(6).toString('base64url');
 }
