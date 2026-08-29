@@ -82,12 +82,15 @@ export function createDeleteOwnedLinkRepository(
 }
 
 export function createFindRedirectBySlugRepository(
-  _prismaFindRedirect: PrismaFindRedirect,
+  prismaFindRedirect: PrismaFindRedirect,
 ) {
   return async function findRedirectBySlug(
-    _slug: string,
+    slug: string,
   ): Promise<RedirectLink | null> {
-    return null;
+    return prismaFindRedirect({
+      where: { slug },
+      select: { originalUrl: true },
+    });
   };
 }
 
