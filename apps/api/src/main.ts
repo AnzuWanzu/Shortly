@@ -4,6 +4,7 @@ import { composeRegistration } from './auth/registration-composition';
 import { composeSession } from './auth/session-composition';
 import { parseEnv } from './config/env';
 import { createPrismaClient } from './database/prisma';
+import { composeLinks } from './links/link-composition';
 
 const {
   PORT: port,
@@ -27,6 +28,7 @@ const app = createApp({
   checkDatabase,
   ...authDependencies,
   secureCookies,
+  linkDependencies: composeLinks(prisma),
 });
 
 const server = app.listen(port, () => {
