@@ -11,10 +11,26 @@ const alwaysAvailableDatabase = async () => undefined;
 const unusedRegisterUser: RegisterUser = async () => {
   throw new Error('Registration was not expected in this test');
 };
+const unusedLoginUser: LoginUser = async () => {
+  throw new Error('Login was not expected in this test');
+};
+const unusedAuthenticateSession: AuthenticateSession = async () => {
+  throw new Error('Authentication was not expected in this test');
+};
+const unusedLogoutUser: LogoutUser = async () => {
+  throw new Error('Logout was not expected in this test');
+};
+const unusedSessionDependencies = {
+  loginUser: unusedLoginUser,
+  authenticateSession: unusedAuthenticateSession,
+  logoutUser: unusedLogoutUser,
+  secureCookies: false,
+};
 const app = createApp({
   webOrigin,
   checkDatabase: alwaysAvailableDatabase,
   registerUser: unusedRegisterUser,
+  ...unusedSessionDependencies,
 });
 
 describe('GET /health', () => {
@@ -83,6 +99,7 @@ describe('GET /ready', () => {
       webOrigin,
       checkDatabase: databaseAvailable,
       registerUser: unusedRegisterUser,
+      ...unusedSessionDependencies,
     });
 
     const response = await request(readyApp).get('/ready');
@@ -99,6 +116,7 @@ describe('GET /ready', () => {
       webOrigin,
       checkDatabase: databaseUnavailable,
       registerUser: unusedRegisterUser,
+      ...unusedSessionDependencies,
     });
 
     const response = await request(unavailableApp).get('/ready');
@@ -121,6 +139,7 @@ describe('authentication routes', () => {
       webOrigin,
       checkDatabase: alwaysAvailableDatabase,
       registerUser,
+      ...unusedSessionDependencies,
     });
 
     const response = await request(registrationApp)

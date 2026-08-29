@@ -1,6 +1,8 @@
 import type { LoginInput } from './login-schema';
 import { InvalidCredentialsError } from './auth-errors';
 
+export const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
+
 export type LoginUserRecord = {
   id: string;
   email: string;
