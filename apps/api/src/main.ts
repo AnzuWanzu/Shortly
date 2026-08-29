@@ -2,6 +2,7 @@ import { createApp } from './app';
 import { composeLogin } from './auth/login/login-composition';
 import { composeRegistration } from './auth/registration/registration-composition';
 import { composeSession } from './auth/session/session-composition';
+import { composeProfile } from './auth/profile/profile-composition';
 import { parseEnv } from './config/env';
 import { createPrismaClient } from './database/prisma';
 import { composeLinks } from './links/management/link-composition';
@@ -29,6 +30,7 @@ const app = createApp({
   checkDatabase,
   ...authDependencies,
   secureCookies,
+  profileDependencies: composeProfile(prisma),
   linkDependencies: composeLinks(prisma),
   redirectDependencies: composeRedirect(prisma),
 });

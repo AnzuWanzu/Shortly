@@ -3,6 +3,7 @@ import { EmailAlreadyExistsError } from '../shared/auth-errors';
 import {
   createFindUserByEmailRepository,
   createUserRepository,
+  createUpdateUserProfileRepository,
 } from './user-repository';
 
 describe('createUserRepository', () => {
@@ -78,6 +79,37 @@ describe('createFindUserByEmailRepository', () => {
         email: true,
         displayName: true,
         passwordHash: true,
+        createdAt: true,
+      },
+    });
+  });
+});
+
+describe('createUpdateUserProfileRepository', () => {
+  it('updates by authenticated user ID and selects only safe fields', async () => {
+    const updatedUser = {
+      id: 'user-123',
+      email: 'anzu@example.com',
+      displayName: 'Anzu Prime',
+      createdAt: new Date('2026-08-29T00:00:00.000Z'),
+    };
+    const prismaUpdateUser = vi.fn(async () => updatedUser);
+    const updateUserProfile =
+      createUpdateUserProfileRepository(prismaUpdateUser);
+
+    await expect(
+      updateUserProfile({
+        userId: updatedUser.id,
+        displayName: updatedUser.displayName,
+      }),
+    ).resolves.toEqual(updatedUser);
+    expect(prismaUpdateUser).toHaveBeenCalledWith({
+      where: { id: updatedUser.id },
+      data: { displayName: updatedUser.displayName },
+      select: {
+        id: true,
+        email: true,
+        displayName: true,
         createdAt: true,
       },
     });

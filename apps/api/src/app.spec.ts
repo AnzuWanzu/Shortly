@@ -13,6 +13,7 @@ import type {
   LogoutUser,
 } from './auth/session/session-service';
 import type { ResolveRedirect } from './links/redirect/redirect-service';
+import type { UpdateProfile } from './auth/profile/profile-service';
 
 const webOrigin = 'http://localhost:4200';
 const alwaysAvailableDatabase = async () => undefined;
@@ -269,5 +270,42 @@ describe('public redirect routes', () => {
     expect(response.status).toBe(302);
     expect(response.headers.location).toBe('https://example.com/articles/42');
     expect(resolveRedirect).toHaveBeenCalledWith('abc123XY');
+  });
+});
+
+describe('profile routes', () => {
+  it('mounts authenticated profile updates under /auth/me', async () => {
+    const user = {
+      id: 'user-123',
+      email: 'anzu@example.com',
+      displayName: 'Anzu',
+      createdAt: new Date('2026-08-29T00:00:00.000Z'),
+    };
+    const updateProfile = vi.fn<UpdateProfile>(async (input) => ({
+      ...user,
+      displayName: input.displayName,
+    }));
+    const profileApp = createApp({
+      webOrigin,
+      checkDatabase: alwaysAvailableDatabase,
+      registerUser: unusedRegisterUser,
+      loginUser: unusedLoginUser,
+      authenticateSession: vi.fn<AuthenticateSession>(async () => user),
+      logoutUser: unusedLogoutUser,
+      secureCookies: false,
+      profileDependencies: { updateProfile },
+    });
+
+    const response = await request(profileApp)
+      .patch('/auth/me')
+      .set('Cookie', `${SESSION_COOKIE_NAME}=raw-session-token`)
+      .set(CSRF_HEADER_NAME, CSRF_HEADER_VALUE)
+      .send({ displayName: 'Anzu Prime' });
+
+    expect(response.status).toBe(200);
+    expect(updateProfile).toHaveBeenCalledWith({
+      userId: user.id,
+      displayName: 'Anzu Prime',
+    });
   });
 });

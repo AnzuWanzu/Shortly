@@ -11,6 +11,8 @@ import type {
   AuthenticateSession,
   LogoutUser,
 } from './auth/session/session-service';
+import { createProfileRouter } from './auth/profile/profile-router';
+import type { UpdateProfile } from './auth/profile/profile-service';
 import {
   CSRF_HEADER_NAME,
   createSessionRouter,
@@ -34,6 +36,10 @@ type RedirectDependencies = {
   resolveRedirect: ResolveRedirect;
 };
 
+type ProfileDependencies = {
+  updateProfile: UpdateProfile;
+};
+
 type AppConfig = {
   webOrigin: string;
   checkDatabase: () => Promise<void>;
@@ -44,6 +50,7 @@ type AppConfig = {
   secureCookies: boolean;
   linkDependencies?: LinkDependencies;
   redirectDependencies?: RedirectDependencies;
+  profileDependencies?: ProfileDependencies;
 };
 
 export function createApp({
@@ -56,6 +63,7 @@ export function createApp({
   secureCookies,
   linkDependencies,
   redirectDependencies,
+  profileDependencies,
 }: AppConfig) {
   const app = express();
 
@@ -67,7 +75,7 @@ export function createApp({
     cors({
       origin: webOrigin,
       credentials: true,
-      methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+      methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', CSRF_HEADER_NAME],
     }),
   );
@@ -86,6 +94,12 @@ export function createApp({
       secureCookies,
     }),
   );
+  if (profileDependencies) {
+    app.use(
+      '/auth',
+      createProfileRouter({ authenticateSession, ...profileDependencies }),
+    );
+  }
   if (linkDependencies) {
     app.use(
       '/links',

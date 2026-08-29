@@ -3,6 +3,8 @@ import type {
   CreateUserInput,
 } from '../registration/registration-service';
 import type { LoginUserRecord } from '../login/login-service';
+import type { AuthenticatedUser } from '../login/login-service';
+import type { UpdateProfileInput } from '../profile/profile-service';
 import { EmailAlreadyExistsError } from '../shared/auth-errors';
 
 type SafeUserSelection = {
@@ -35,6 +37,12 @@ type PrismaFindUserArgs = {
 type PrismaFindUser = (
   args: PrismaFindUserArgs,
 ) => Promise<LoginUserRecord | null>;
+
+type PrismaUpdateUser = (args: {
+  where: { id: string };
+  data: { displayName: string };
+  select: SafeUserSelection;
+}) => Promise<AuthenticatedUser>;
 
 export function createUserRepository(prismaCreateUser: PrismaCreateUser) {
   return async function createUser(
@@ -73,6 +81,25 @@ export function createFindUserByEmailRepository(
         email: true,
         displayName: true,
         passwordHash: true,
+        createdAt: true,
+      },
+    });
+  };
+}
+
+export function createUpdateUserProfileRepository(
+  prismaUpdateUser: PrismaUpdateUser,
+) {
+  return async function updateUserProfile(
+    input: UpdateProfileInput,
+  ): Promise<AuthenticatedUser> {
+    return prismaUpdateUser({
+      where: { id: input.userId },
+      data: { displayName: input.displayName },
+      select: {
+        id: true,
+        email: true,
+        displayName: true,
         createdAt: true,
       },
     });
