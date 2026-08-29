@@ -1,5 +1,6 @@
 import type { AuthenticatedUser } from './login-service';
 import type { StoredSession } from './session-repository';
+import { UnauthenticatedError } from './auth-errors';
 
 type SessionDependencies = {
   hashSessionToken: (token: string) => string;
@@ -14,16 +15,37 @@ export type AuthenticateSession = (
 
 export type LogoutUser = (token: string | undefined) => Promise<void>;
 
-export function createAuthenticateSession(_dependencies: SessionDependencies) {
+export function createAuthenticateSession(dependencies: SessionDependencies) {
   return async function authenticateSession(
-    _token: string | undefined,
+    token: string | undefined,
   ): Promise<AuthenticatedUser> {
-    throw new Error('Not implemented');
+    if (!token) {
+      throw new UnauthenticatedError();
+    }
+
+    const tokenHash = dependencies.hashSessionToken(token);
+    const session = await dependencies.findSession(tokenHash);
+
+    if (!session) {
+      throw new UnauthenticatedError();
+    }
+
+    if (session.expiresAt.getTime() <= dependencies.now().getTime()) {
+      await dependencies.deleteSession(tokenHash);
+      throw new UnauthenticatedError();
+    }
+
+    return session.user;
   };
 }
 
-export function createLogoutUser(_dependencies: SessionDependencies) {
-  return async function logoutUser(_token: string | undefined): Promise<void> {
-    throw new Error('Not implemented');
+export function createLogoutUser(dependencies: SessionDependencies) {
+  return async function logoutUser(token: string | undefined): Promise<void> {
+    if (!token) {
+      return;
+    }
+
+    const tokenHash = dependencies.hashSessionToken(token);
+    await dependencies.deleteSession(tokenHash);
   };
 }
