@@ -12,6 +12,11 @@ const envSchema = z.object({
   DATABASE_URL: z.url({
     protocol: /^postgresql$/,
   }),
+
+  COOKIE_SECURE: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
 });
 
 export function parseEnv(input: NodeJS.ProcessEnv) {

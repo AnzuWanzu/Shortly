@@ -60,4 +60,22 @@ describe('parseEnv', () => {
       }),
     ).toThrow();
   });
+
+  it('keeps Secure cookies off for local HTTP by default', () => {
+    const config = parseEnv(validEnv);
+
+    expect(config.COOKIE_SECURE).toBe(false);
+  });
+
+  it('enables Secure cookies from an explicit deployment setting', () => {
+    const config = parseEnv({ ...validEnv, COOKIE_SECURE: 'true' });
+
+    expect(config.COOKIE_SECURE).toBe(true);
+  });
+
+  it('rejects an ambiguous Secure-cookie setting', () => {
+    expect(() =>
+      parseEnv({ ...validEnv, COOKIE_SECURE: 'sometimes' }),
+    ).toThrow();
+  });
 });
