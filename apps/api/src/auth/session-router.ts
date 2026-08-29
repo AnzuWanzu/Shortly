@@ -114,7 +114,7 @@ export function createSessionRouter(dependencies: SessionRouterDependencies) {
   return router;
 }
 
-function requireCsrfHeader(
+export function requireCsrfHeader(
   request: Request,
   response: Response,
   next: () => void,
@@ -132,7 +132,7 @@ function requireCsrfHeader(
   next();
 }
 
-function readSessionCookie(request: Request): string | undefined {
+export function readSessionCookie(request: Request): string | undefined {
   const value: unknown = request.cookies?.[SESSION_COOKIE_NAME];
   return typeof value === 'string' ? value : undefined;
 }
