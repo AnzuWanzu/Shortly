@@ -21,12 +21,18 @@ describe('registrationSchema', () => {
     });
   });
 
+  it('accepts an eight-character password', () => {
+    expect(
+      registrationSchema.parse({ ...validRegistration, password: 'eight888' }),
+    ).toMatchObject({ password: 'eight888' });
+  });
+
   it.each([
     ['an invalid email', { ...validRegistration, email: 'not-an-email' }],
     ['a blank display name', { ...validRegistration, displayName: '   ' }],
     [
-      'a password shorter than 15 characters',
-      { ...validRegistration, password: 'too-short' },
+      'a password shorter than 8 characters',
+      { ...validRegistration, password: 'short77' },
     ],
     ['an undeclared privilege field', { ...validRegistration, isAdmin: true }],
   ])('rejects %s', (_caseName, input) => {
