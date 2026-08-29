@@ -30,3 +30,11 @@ export async function register(input: RegistrationInput) {
 export async function logout() {
   return apiRequest<void>('/auth/logout', { method: 'POST' });
 }
+
+export async function updateProfile(input: { displayName: string }) {
+  const response = await apiRequest<UserEnvelope>('/auth/me', {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  });
+  return response.user;
+}

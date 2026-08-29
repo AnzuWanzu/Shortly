@@ -1,4 +1,4 @@
-import { Link2, List, LogOut, Menu, Settings, X } from 'lucide-react';
+import { Link2, List, Menu, Settings, X } from 'lucide-react';
 import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router';
 
@@ -42,7 +42,10 @@ export function ApplicationShell() {
         <div className="hidden lg:block">
           <Brand />
         </div>
-        <nav className="mt-0 grid gap-1 lg:mt-12" aria-label="Primary navigation">
+        <nav
+          className="mt-0 grid gap-1 lg:mt-12"
+          aria-label="Primary navigation"
+        >
           {navigation.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
@@ -68,13 +71,13 @@ export function ApplicationShell() {
             {user?.displayName}
           </p>
           <p className="mt-0.5 truncate text-xs text-muted">{user?.email}</p>
-          <span className="mt-4 inline-flex items-center gap-2 text-xs text-muted">
-            <LogOut className="size-3.5" aria-hidden /> Logout is available in Settings
-          </span>
         </div>
       </aside>
 
-      <main id="main-content" className="min-w-0 px-5 py-8 sm:px-8 lg:px-12 lg:py-10">
+      <main
+        id="main-content"
+        className="min-w-0 px-5 py-8 sm:px-8 lg:px-12 lg:py-10"
+      >
         <Outlet />
       </main>
     </div>
