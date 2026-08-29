@@ -67,7 +67,9 @@ describe('POST /auth/login', () => {
       email: 'anzu@example.com',
       password: 'password',
     });
-    expect(response.body).toEqual({ user });
+    expect(response.body).toEqual({
+      user: { ...user, createdAt: user.createdAt.toISOString() },
+    });
     expect(response.headers['set-cookie'][0]).toContain(
       `${SESSION_COOKIE_NAME}=raw-session-token`,
     );
@@ -134,7 +136,9 @@ describe('GET /auth/me', () => {
     expect(dependencies.authenticateSession).toHaveBeenCalledWith(
       'raw-session-token',
     );
-    expect(response.body).toEqual({ user });
+    expect(response.body).toEqual({
+      user: { ...user, createdAt: user.createdAt.toISOString() },
+    });
   });
 
   it('returns unauthorized for a missing or invalid session', async () => {
