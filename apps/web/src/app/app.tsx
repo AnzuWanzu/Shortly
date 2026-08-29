@@ -1,17 +1,7 @@
-import styles from './app.module.css';
+import { AppRouter } from './app-router';
 
 export function App() {
-  return (
-    <main className={styles.page}>
-      <section className={styles.card} aria-labelledby="shortly-heading">
-        <span className={styles.logo} aria-hidden="true">
-          🔗
-        </span>
-        <h1 id="shortly-heading">Shortly</h1>
-        <p>Web foundation ready.</p>
-      </section>
-    </main>
-  );
+  return <AppRouter />;
 }
 
 export default App;
