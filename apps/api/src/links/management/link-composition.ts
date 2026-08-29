@@ -3,7 +3,7 @@ import {
   createDeleteOwnedLinkRepository,
   createLinkRecordRepository,
   createListOwnedLinksRepository,
-} from '../link-repository';
+} from '../persistence/link-repository';
 import { createCreateOwnedLink } from './link-service';
 import { createSlug } from './slug';
 
