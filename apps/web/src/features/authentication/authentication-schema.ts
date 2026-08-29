@@ -18,6 +18,6 @@ export const signupFormSchema = z.strictObject({
   displayName: z.string().trim().min(1, 'Enter your name').max(100),
   password: z
     .string()
-    .min(15, 'Use at least 15 characters')
+    .min(8, 'Use at least 8 characters')
     .max(128, 'Use no more than 128 characters'),
 });

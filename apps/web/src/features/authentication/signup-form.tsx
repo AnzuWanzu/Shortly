@@ -93,7 +93,7 @@ export function SignupForm({ onRegistered }: { onRegistered: () => void }) {
       <FormField
         id="signup-password"
         label="Password"
-        hint="Use at least 15 characters. Spaces are allowed."
+        hint="Use at least 8 characters. Spaces are allowed."
         error={fieldErrors.password}
       >
         <div className="relative">
