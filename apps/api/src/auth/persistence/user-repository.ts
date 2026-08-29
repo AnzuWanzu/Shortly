@@ -88,12 +88,21 @@ export function createFindUserByEmailRepository(
 }
 
 export function createUpdateUserProfileRepository(
-  _prismaUpdateUser: PrismaUpdateUser,
+  prismaUpdateUser: PrismaUpdateUser,
 ) {
   return async function updateUserProfile(
-    _input: UpdateProfileInput,
+    input: UpdateProfileInput,
   ): Promise<AuthenticatedUser> {
-    throw new Error('Not implemented');
+    return prismaUpdateUser({
+      where: { id: input.userId },
+      data: { displayName: input.displayName },
+      select: {
+        id: true,
+        email: true,
+        displayName: true,
+        createdAt: true,
+      },
+    });
   };
 }
 

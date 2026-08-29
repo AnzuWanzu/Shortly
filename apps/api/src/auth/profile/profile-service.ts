@@ -11,11 +11,11 @@ type ProfileDependencies = {
 };
 
 export function createUpdateProfile(
-  _dependencies: ProfileDependencies,
+  dependencies: ProfileDependencies,
 ): UpdateProfile {
   return async function updateProfile(
-    _input: UpdateProfileInput,
+    input: UpdateProfileInput,
   ): Promise<AuthenticatedUser> {
-    throw new Error('Not implemented');
+    return dependencies.updateUserProfile(input);
   };
 }
