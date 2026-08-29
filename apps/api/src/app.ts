@@ -21,11 +21,17 @@ import {
   type DeleteOwnedLink,
   type ListOwnedLinks,
 } from './links/management/link-router';
+import { createRedirectRouter } from './links/redirect/redirect-router';
+import type { ResolveRedirect } from './links/redirect/redirect-service';
 
 type LinkDependencies = {
   createOwnedLink: CreateOwnedLink;
   listOwnedLinks: ListOwnedLinks;
   deleteOwnedLink: DeleteOwnedLink;
+};
+
+type RedirectDependencies = {
+  resolveRedirect: ResolveRedirect;
 };
 
 type AppConfig = {
@@ -37,6 +43,7 @@ type AppConfig = {
   logoutUser: LogoutUser;
   secureCookies: boolean;
   linkDependencies?: LinkDependencies;
+  redirectDependencies?: RedirectDependencies;
 };
 
 export function createApp({
@@ -48,6 +55,7 @@ export function createApp({
   logoutUser,
   secureCookies,
   linkDependencies,
+  redirectDependencies,
 }: AppConfig) {
   const app = express();
 
@@ -83,6 +91,9 @@ export function createApp({
       '/links',
       createLinkRouter({ authenticateSession, ...linkDependencies }),
     );
+  }
+  if (redirectDependencies) {
+    app.use('/r', createRedirectRouter(redirectDependencies));
   }
 
   app.get('/api', (req, res) => {

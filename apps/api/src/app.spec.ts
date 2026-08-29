@@ -12,6 +12,7 @@ import type {
   AuthenticateSession,
   LogoutUser,
 } from './auth/session/session-service';
+import type { ResolveRedirect } from './links/redirect/redirect-service';
 
 const webOrigin = 'http://localhost:4200';
 const alwaysAvailableDatabase = async () => undefined;
@@ -247,5 +248,26 @@ describe('owned link routes', () => {
       userId: user.id,
       originalUrl: link.originalUrl,
     });
+  });
+});
+
+describe('public redirect routes', () => {
+  it('mounts slug redirects under /r without authentication', async () => {
+    const resolveRedirect = vi.fn<ResolveRedirect>(
+      async () => 'https://example.com/articles/42',
+    );
+    const redirectApp = createApp({
+      webOrigin,
+      checkDatabase: alwaysAvailableDatabase,
+      registerUser: unusedRegisterUser,
+      ...unusedSessionDependencies,
+      redirectDependencies: { resolveRedirect },
+    });
+
+    const response = await request(redirectApp).get('/r/abc123XY');
+
+    expect(response.status).toBe(302);
+    expect(response.headers.location).toBe('https://example.com/articles/42');
+    expect(resolveRedirect).toHaveBeenCalledWith('abc123XY');
   });
 });

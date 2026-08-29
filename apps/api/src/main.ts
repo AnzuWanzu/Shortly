@@ -5,6 +5,7 @@ import { composeSession } from './auth/session/session-composition';
 import { parseEnv } from './config/env';
 import { createPrismaClient } from './database/prisma';
 import { composeLinks } from './links/management/link-composition';
+import { composeRedirect } from './links/redirect/redirect-composition';
 
 const {
   PORT: port,
@@ -29,6 +30,7 @@ const app = createApp({
   ...authDependencies,
   secureCookies,
   linkDependencies: composeLinks(prisma),
+  redirectDependencies: composeRedirect(prisma),
 });
 
 const server = app.listen(port, () => {
