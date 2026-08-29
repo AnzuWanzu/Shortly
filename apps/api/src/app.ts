@@ -9,6 +9,18 @@ import {
 import type { LoginUser } from './auth/login-service';
 import type { AuthenticateSession, LogoutUser } from './auth/session-service';
 import { CSRF_HEADER_NAME, createSessionRouter } from './auth/session-router';
+import {
+  createLinkRouter,
+  type CreateOwnedLink,
+  type DeleteOwnedLink,
+  type ListOwnedLinks,
+} from './links/link-router';
+
+type LinkDependencies = {
+  createOwnedLink: CreateOwnedLink;
+  listOwnedLinks: ListOwnedLinks;
+  deleteOwnedLink: DeleteOwnedLink;
+};
 
 type AppConfig = {
   webOrigin: string;
@@ -18,6 +30,7 @@ type AppConfig = {
   authenticateSession: AuthenticateSession;
   logoutUser: LogoutUser;
   secureCookies: boolean;
+  linkDependencies?: LinkDependencies;
 };
 
 export function createApp({
@@ -28,6 +41,7 @@ export function createApp({
   authenticateSession,
   logoutUser,
   secureCookies,
+  linkDependencies,
 }: AppConfig) {
   const app = express();
 
@@ -58,6 +72,12 @@ export function createApp({
       secureCookies,
     }),
   );
+  if (linkDependencies) {
+    app.use(
+      '/links',
+      createLinkRouter({ authenticateSession, ...linkDependencies }),
+    );
+  }
 
   app.get('/api', (req, res) => {
     res.send({ message: 'Welcome to api!' });
