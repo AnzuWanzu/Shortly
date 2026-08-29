@@ -1,37 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import request from 'supertest';
 import { createApp } from '../../src/app';
-import {
-  DUMMY_PASSWORD_HASH,
-  hashPassword,
-  verifyPassword,
-} from '../../src/auth/password-hasher';
-import {
-  SESSION_DURATION_MS,
-  createLoginUser,
-} from '../../src/auth/login-service';
-import { createRegisterUser } from '../../src/auth/registration-service';
-import {
-  createCreateSessionRepository,
-  createDeleteSessionRepository,
-  createFindSessionRepository,
-} from '../../src/auth/session-repository';
+import { composeLogin } from '../../src/auth/login-composition';
+import { composeRegistration } from '../../src/auth/registration-composition';
+import { composeSession } from '../../src/auth/session-composition';
 import {
   CSRF_HEADER_NAME,
   CSRF_HEADER_VALUE,
 } from '../../src/auth/session-router';
-import {
-  createAuthenticateSession,
-  createLogoutUser,
-} from '../../src/auth/session-service';
-import {
-  createSessionToken,
-  hashSessionToken,
-} from '../../src/auth/session-token';
-import {
-  createFindUserByEmailRepository,
-  createUserRepository,
-} from '../../src/auth/user-repository';
 import { createPrismaClient } from '../../src/database/prisma';
 
 const databaseUrl = process.env['DATABASE_URL_TEST'];
@@ -64,48 +40,20 @@ describe('opaque session lifecycle', () => {
     const password = 'correct horse battery staple';
     createdEmails.add(email);
 
-    const createUser = createUserRepository((args) => prisma.user.create(args));
-    const registerUser = createRegisterUser({ hashPassword, createUser });
-    const user = await registerUser({
+    const authDependencies = {
+      ...composeRegistration(prisma),
+      ...composeLogin(prisma),
+      ...composeSession(prisma),
+    };
+    const user = await authDependencies.registerUser({
       email,
       displayName: 'Session Anzu',
       password,
     });
-    const findUserByEmail = createFindUserByEmailRepository((args) =>
-      prisma.user.findUnique(args),
-    );
-    const createSession = createCreateSessionRepository((args) =>
-      prisma.session.create(args),
-    );
-    const findSession = createFindSessionRepository((args) =>
-      prisma.session.findUnique(args),
-    );
-    const deleteSession = createDeleteSessionRepository((args) =>
-      prisma.session.deleteMany(args),
-    );
-    const loginUser = createLoginUser({
-      findUserByEmail,
-      verifyPassword,
-      createSession,
-      createSessionToken,
-      hashSessionToken,
-      now: () => new Date(),
-      sessionDurationMs: SESSION_DURATION_MS,
-      dummyPasswordHash: DUMMY_PASSWORD_HASH,
-    });
-    const sessionDependencies = {
-      hashSessionToken,
-      findSession,
-      deleteSession,
-      now: () => new Date(),
-    };
     const app = createApp({
       webOrigin: 'http://localhost:4200',
       checkDatabase: async () => undefined,
-      registerUser,
-      loginUser,
-      authenticateSession: createAuthenticateSession(sessionDependencies),
-      logoutUser: createLogoutUser(sessionDependencies),
+      ...authDependencies,
       secureCookies: false,
     });
     const agent = request.agent(app);

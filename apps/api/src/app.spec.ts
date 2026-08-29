@@ -3,7 +3,11 @@ import { vi } from 'vitest';
 import { createApp } from './app';
 import type { RegisterUser } from './auth/registration-router';
 import type { LoginUser } from './auth/login-service';
-import { CSRF_HEADER_NAME, CSRF_HEADER_VALUE } from './auth/session-router';
+import {
+  CSRF_HEADER_NAME,
+  CSRF_HEADER_VALUE,
+  SESSION_COOKIE_NAME,
+} from './auth/session-router';
 import type { AuthenticateSession, LogoutUser } from './auth/session-service';
 
 const webOrigin = 'http://localhost:4200';
@@ -193,6 +197,52 @@ describe('authentication routes', () => {
     expect(response.status).toBe(200);
     expect(response.body).toEqual({
       user: { ...user, createdAt: user.createdAt.toISOString() },
+    });
+  });
+});
+
+describe('owned link routes', () => {
+  it('mounts authenticated link creation under /links', async () => {
+    const user = {
+      id: 'user-123',
+      email: 'anzu@example.com',
+      displayName: 'Anzu',
+      createdAt: new Date('2026-08-29T00:00:00.000Z'),
+    };
+    const link = {
+      id: '8ef22366-a9ce-4ebd-8c11-59779bcd66f4',
+      slug: 'abc123XY',
+      originalUrl: 'https://example.com/long',
+      userId: user.id,
+      createdAt: new Date('2026-08-29T01:00:00.000Z'),
+    };
+    const createOwnedLink = vi.fn(async () => link);
+    const linkAppConfig = {
+      webOrigin,
+      checkDatabase: alwaysAvailableDatabase,
+      registerUser: unusedRegisterUser,
+      loginUser: unusedLoginUser,
+      authenticateSession: vi.fn<AuthenticateSession>(async () => user),
+      logoutUser: unusedLogoutUser,
+      secureCookies: false,
+      linkDependencies: {
+        createOwnedLink,
+        listOwnedLinks: vi.fn(async () => [link]),
+        deleteOwnedLink: vi.fn(async () => undefined),
+      },
+    };
+    const linkApp = createApp(linkAppConfig);
+
+    const response = await request(linkApp)
+      .post('/links')
+      .set('Cookie', `${SESSION_COOKIE_NAME}=raw-session-token`)
+      .set(CSRF_HEADER_NAME, CSRF_HEADER_VALUE)
+      .send({ originalUrl: link.originalUrl });
+
+    expect(response.status).toBe(201);
+    expect(createOwnedLink).toHaveBeenCalledWith({
+      userId: user.id,
+      originalUrl: link.originalUrl,
     });
   });
 });
