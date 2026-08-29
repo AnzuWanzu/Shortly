@@ -1,14 +1,17 @@
 import request from 'supertest';
 import { vi } from 'vitest';
 import { createApp } from './app';
-import type { RegisterUser } from './auth/registration-router';
-import type { LoginUser } from './auth/login-service';
+import type { RegisterUser } from './auth/registration/registration-router';
+import type { LoginUser } from './auth/login/login-service';
 import {
   CSRF_HEADER_NAME,
   CSRF_HEADER_VALUE,
   SESSION_COOKIE_NAME,
-} from './auth/session-router';
-import type { AuthenticateSession, LogoutUser } from './auth/session-service';
+} from './auth/session/session-router';
+import type {
+  AuthenticateSession,
+  LogoutUser,
+} from './auth/session/session-service';
 
 const webOrigin = 'http://localhost:4200';
 const alwaysAvailableDatabase = async () => undefined;

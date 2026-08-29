@@ -1,8 +1,8 @@
-import type { createPrismaClient } from '../database/prisma';
+import type { createPrismaClient } from '../../database/prisma';
 import {
   createDeleteSessionRepository,
   createFindSessionRepository,
-} from './session-repository';
+} from '../persistence/session-repository';
 import { createAuthenticateSession, createLogoutUser } from './session-service';
 import { hashSessionToken } from './session-token';
 

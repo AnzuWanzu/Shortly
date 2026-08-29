@@ -2,8 +2,11 @@ import cookieParser from 'cookie-parser';
 import express from 'express';
 import request from 'supertest';
 import { vi } from 'vitest';
-import { InvalidCredentialsError, UnauthenticatedError } from './auth-errors';
-import type { LoginUser } from './login-service';
+import {
+  InvalidCredentialsError,
+  UnauthenticatedError,
+} from '../shared/auth-errors';
+import type { LoginUser } from '../login/login-service';
 import {
   CSRF_HEADER_NAME,
   CSRF_HEADER_VALUE,

@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import { UnauthenticatedError } from './auth-errors';
+import { UnauthenticatedError } from '../shared/auth-errors';
 import { createAuthenticateSession, createLogoutUser } from './session-service';
 
 const user = {

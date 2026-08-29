@@ -1,8 +1,11 @@
 import { Router } from 'express';
 import type { CookieOptions, Request, Response } from 'express';
-import { InvalidCredentialsError, UnauthenticatedError } from './auth-errors';
-import { loginSchema } from './login-schema';
-import type { LoginUser } from './login-service';
+import {
+  InvalidCredentialsError,
+  UnauthenticatedError,
+} from '../shared/auth-errors';
+import { loginSchema } from '../login/login-schema';
+import type { LoginUser } from '../login/login-service';
 import type { AuthenticateSession, LogoutUser } from './session-service';
 
 export const SESSION_COOKIE_NAME = 'shortly_session';

@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import { EmailAlreadyExistsError } from './auth-errors';
+import { EmailAlreadyExistsError } from '../shared/auth-errors';
 import {
   createFindUserByEmailRepository,
   createUserRepository,

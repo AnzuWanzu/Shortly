@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import { InvalidCredentialsError } from './auth-errors';
+import { InvalidCredentialsError } from '../shared/auth-errors';
 import { createLoginUser } from './login-service';
 
 const input = {

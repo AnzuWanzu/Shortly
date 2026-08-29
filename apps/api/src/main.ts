@@ -1,7 +1,7 @@
 import { createApp } from './app';
-import { composeLogin } from './auth/login-composition';
-import { composeRegistration } from './auth/registration-composition';
-import { composeSession } from './auth/session-composition';
+import { composeLogin } from './auth/login/login-composition';
+import { composeRegistration } from './auth/registration/registration-composition';
+import { composeSession } from './auth/session/session-composition';
 import { parseEnv } from './config/env';
 import { createPrismaClient } from './database/prisma';
 import { composeLinks } from './links/link-composition';
