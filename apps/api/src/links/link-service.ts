@@ -1,4 +1,5 @@
 import type { CreateLinkRequest } from './link-schema';
+import { SlugAlreadyExistsError } from './link-errors';
 
 export type LinkRecord = {
   id: string;
@@ -24,11 +25,31 @@ type CreateOwnedLinkDependencies = {
 };
 
 export function createCreateOwnedLink(
-  _dependencies: CreateOwnedLinkDependencies,
+  dependencies: CreateOwnedLinkDependencies,
 ) {
   return async function createOwnedLink(
-    _input: CreateOwnedLinkInput,
+    input: CreateOwnedLinkInput,
   ): Promise<LinkRecord> {
-    throw new Error('Not implemented');
+    for (let attempt = 1; attempt <= dependencies.maxSlugAttempts; attempt++) {
+      try {
+        return await dependencies.createLinkRecord({
+          userId: input.userId,
+          originalUrl: input.originalUrl,
+          slug: dependencies.createSlug(),
+        });
+      } catch (error) {
+        const canRetry =
+          error instanceof SlugAlreadyExistsError &&
+          attempt < dependencies.maxSlugAttempts;
+
+        if (canRetry) {
+          continue;
+        }
+
+        throw error;
+      }
+    }
+
+    throw new Error('Unable to generate a unique slug');
   };
 }
