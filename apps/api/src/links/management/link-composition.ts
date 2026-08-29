@@ -1,9 +1,9 @@
-import type { createPrismaClient } from '../database/prisma';
+import type { createPrismaClient } from '../../database/prisma';
 import {
   createDeleteOwnedLinkRepository,
   createLinkRecordRepository,
   createListOwnedLinksRepository,
-} from './link-repository';
+} from '../link-repository';
 import { createCreateOwnedLink } from './link-service';
 import { createSlug } from './slug';
 

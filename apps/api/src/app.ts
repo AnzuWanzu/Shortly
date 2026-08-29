@@ -20,7 +20,7 @@ import {
   type CreateOwnedLink,
   type DeleteOwnedLink,
   type ListOwnedLinks,
-} from './links/link-router';
+} from './links/management/link-router';
 
 type LinkDependencies = {
   createOwnedLink: CreateOwnedLink;

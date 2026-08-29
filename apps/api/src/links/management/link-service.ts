@@ -1,5 +1,5 @@
 import type { CreateLinkRequest } from './link-schema';
-import { SlugAlreadyExistsError } from './link-errors';
+import { SlugAlreadyExistsError } from '../link-errors';
 
 export type LinkRecord = {
   id: string;

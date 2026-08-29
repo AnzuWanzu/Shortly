@@ -1,4 +1,7 @@
-import type { CreateLinkRecordInput, LinkRecord } from './link-service';
+import type {
+  CreateLinkRecordInput,
+  LinkRecord,
+} from './management/link-service';
 import { LinkNotFoundError, SlugAlreadyExistsError } from './link-errors';
 
 const linkSelection = {
