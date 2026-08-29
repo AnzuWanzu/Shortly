@@ -7,8 +7,11 @@ import {
   CSRF_HEADER_NAME,
   CSRF_HEADER_VALUE,
   SESSION_COOKIE_NAME,
-} from './auth/session-router';
-import type { AuthenticateSession, LogoutUser } from './auth/session-service';
+} from './auth/session/session-router';
+import type {
+  AuthenticateSession,
+  LogoutUser,
+} from './auth/session/session-service';
 
 const webOrigin = 'http://localhost:4200';
 const alwaysAvailableDatabase = async () => undefined;

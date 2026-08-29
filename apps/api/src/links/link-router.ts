@@ -1,7 +1,10 @@
 import { Router, type Request, type Response } from 'express';
 import { UnauthenticatedError } from '../auth/auth-errors';
-import { readSessionCookie, requireCsrfHeader } from '../auth/session-router';
-import type { AuthenticateSession } from '../auth/session-service';
+import {
+  readSessionCookie,
+  requireCsrfHeader,
+} from '../auth/session/session-router';
+import type { AuthenticateSession } from '../auth/session/session-service';
 import { LinkNotFoundError } from './link-errors';
 import { createLinkSchema, linkIdSchema } from './link-schema';
 import type { CreateOwnedLinkInput, LinkRecord } from './link-service';

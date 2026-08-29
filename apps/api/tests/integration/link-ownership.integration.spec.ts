@@ -3,11 +3,11 @@ import request from 'supertest';
 import { createApp } from '../../src/app';
 import { composeLogin } from '../../src/auth/login/login-composition';
 import { composeRegistration } from '../../src/auth/registration/registration-composition';
-import { composeSession } from '../../src/auth/session-composition';
+import { composeSession } from '../../src/auth/session/session-composition';
 import {
   CSRF_HEADER_NAME,
   CSRF_HEADER_VALUE,
-} from '../../src/auth/session-router';
+} from '../../src/auth/session/session-router';
 import { createPrismaClient } from '../../src/database/prisma';
 import { composeLinks } from '../../src/links/link-composition';
 

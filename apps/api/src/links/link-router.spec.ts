@@ -3,12 +3,12 @@ import express from 'express';
 import request from 'supertest';
 import { vi } from 'vitest';
 import { UnauthenticatedError } from '../auth/auth-errors';
-import type { AuthenticateSession } from '../auth/session-service';
+import type { AuthenticateSession } from '../auth/session/session-service';
 import {
   CSRF_HEADER_NAME,
   CSRF_HEADER_VALUE,
   SESSION_COOKIE_NAME,
-} from '../auth/session-router';
+} from '../auth/session/session-router';
 import { LinkNotFoundError } from './link-errors';
 import {
   createLinkRouter,

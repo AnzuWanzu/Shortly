@@ -1,6 +1,6 @@
-import type { AuthenticatedUser } from './login/login-service';
-import type { StoredSession } from './session-repository';
-import { UnauthenticatedError } from './auth-errors';
+import type { AuthenticatedUser } from '../login/login-service';
+import type { StoredSession } from '../session-repository';
+import { UnauthenticatedError } from '../auth-errors';
 
 type SessionDependencies = {
   hashSessionToken: (token: string) => string;
