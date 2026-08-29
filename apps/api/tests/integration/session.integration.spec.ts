@@ -3,6 +3,7 @@ import request from 'supertest';
 import { createApp } from '../../src/app';
 import { composeLogin } from '../../src/auth/login/login-composition';
 import { composeRegistration } from '../../src/auth/registration/registration-composition';
+import { composeProfile } from '../../src/auth/profile/profile-composition';
 import { composeSession } from '../../src/auth/session/session-composition';
 import {
   CSRF_HEADER_NAME,
@@ -55,6 +56,7 @@ describe('opaque session lifecycle', () => {
       checkDatabase: async () => undefined,
       ...authDependencies,
       secureCookies: false,
+      profileDependencies: composeProfile(prisma),
     });
     const agent = request.agent(app);
 
@@ -74,6 +76,29 @@ describe('opaque session lifecycle', () => {
     const meResponse = await agent.get('/auth/me');
     expect(meResponse.status).toBe(200);
     expect(meResponse.body.user).toMatchObject({ id: user.id, email });
+
+    const profileResponse = await agent
+      .patch('/auth/me')
+      .set(CSRF_HEADER_NAME, CSRF_HEADER_VALUE)
+      .send({ displayName: 'Updated Session Anzu' });
+    expect(profileResponse.status).toBe(200);
+    expect(profileResponse.body.user).toMatchObject({
+      id: user.id,
+      email,
+      displayName: 'Updated Session Anzu',
+    });
+
+    const updatedMeResponse = await agent.get('/auth/me');
+    expect(updatedMeResponse.status).toBe(200);
+    expect(updatedMeResponse.body.user.displayName).toBe(
+      'Updated Session Anzu',
+    );
+    await expect(
+      prisma.user.findUniqueOrThrow({
+        where: { id: user.id },
+        select: { displayName: true },
+      }),
+    ).resolves.toEqual({ displayName: 'Updated Session Anzu' });
 
     const logoutResponse = await agent
       .post('/auth/logout')
