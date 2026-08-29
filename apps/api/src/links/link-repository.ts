@@ -1,4 +1,5 @@
 import type { CreateLinkRecordInput, LinkRecord } from './link-service';
+import { LinkNotFoundError, SlugAlreadyExistsError } from './link-errors';
 
 const linkSelection = {
   id: true,
@@ -23,31 +24,59 @@ type PrismaDeleteLinks = (args: {
   where: { id: string; userId: string };
 }) => Promise<{ count: number }>;
 
-export function createLinkRecordRepository(
-  _prismaCreateLink: PrismaCreateLink,
-) {
+export function createLinkRecordRepository(prismaCreateLink: PrismaCreateLink) {
   return async function createLinkRecord(
-    _input: CreateLinkRecordInput,
+    input: CreateLinkRecordInput,
   ): Promise<LinkRecord> {
-    throw new Error('Not implemented');
+    try {
+      return await prismaCreateLink({ data: input, select: linkSelection });
+    } catch (error) {
+      if (isErrorWithCode(error, 'P2002')) {
+        throw new SlugAlreadyExistsError();
+      }
+
+      throw error;
+    }
   };
 }
 
 export function createListOwnedLinksRepository(
-  _prismaFindLinks: PrismaFindLinks,
+  prismaFindLinks: PrismaFindLinks,
 ) {
-  return async function listOwnedLinks(_userId: string): Promise<LinkRecord[]> {
-    throw new Error('Not implemented');
+  return async function listOwnedLinks(userId: string): Promise<LinkRecord[]> {
+    return prismaFindLinks({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      select: linkSelection,
+    });
   };
 }
 
 export function createDeleteOwnedLinkRepository(
-  _prismaDeleteLinks: PrismaDeleteLinks,
+  prismaDeleteLinks: PrismaDeleteLinks,
 ) {
-  return async function deleteOwnedLink(_input: {
+  return async function deleteOwnedLink(input: {
     linkId: string;
     userId: string;
   }): Promise<void> {
-    throw new Error('Not implemented');
+    const result = await prismaDeleteLinks({
+      where: { id: input.linkId, userId: input.userId },
+    });
+
+    if (result.count === 0) {
+      throw new LinkNotFoundError();
+    }
   };
+}
+
+function isErrorWithCode(
+  error: unknown,
+  expectedCode: string,
+): error is { code: string } {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === expectedCode
+  );
 }
