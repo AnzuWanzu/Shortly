@@ -3,6 +3,8 @@ import type {
   CreateUserInput,
 } from '../registration/registration-service';
 import type { LoginUserRecord } from '../login/login-service';
+import type { AuthenticatedUser } from '../login/login-service';
+import type { UpdateProfileInput } from '../profile/profile-service';
 import { EmailAlreadyExistsError } from '../shared/auth-errors';
 
 type SafeUserSelection = {
@@ -35,6 +37,12 @@ type PrismaFindUserArgs = {
 type PrismaFindUser = (
   args: PrismaFindUserArgs,
 ) => Promise<LoginUserRecord | null>;
+
+type PrismaUpdateUser = (args: {
+  where: { id: string };
+  data: { displayName: string };
+  select: SafeUserSelection;
+}) => Promise<AuthenticatedUser>;
 
 export function createUserRepository(prismaCreateUser: PrismaCreateUser) {
   return async function createUser(
@@ -76,6 +84,16 @@ export function createFindUserByEmailRepository(
         createdAt: true,
       },
     });
+  };
+}
+
+export function createUpdateUserProfileRepository(
+  _prismaUpdateUser: PrismaUpdateUser,
+) {
+  return async function updateUserProfile(
+    _input: UpdateProfileInput,
+  ): Promise<AuthenticatedUser> {
+    throw new Error('Not implemented');
   };
 }
 
