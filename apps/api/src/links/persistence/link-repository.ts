@@ -2,7 +2,11 @@ import {
   LinkNotFoundError,
   SlugAlreadyExistsError,
 } from '../shared/link-errors';
-import type { CreateLinkRecordInput, LinkRecord } from '../shared/link-types';
+import type {
+  CreateLinkRecordInput,
+  LinkRecord,
+  RedirectLink,
+} from '../shared/link-types';
 
 const linkSelection = {
   id: true,
@@ -26,6 +30,11 @@ type PrismaFindLinks = (args: {
 type PrismaDeleteLinks = (args: {
   where: { id: string; userId: string };
 }) => Promise<{ count: number }>;
+
+type PrismaFindRedirect = (args: {
+  where: { slug: string };
+  select: { originalUrl: true };
+}) => Promise<RedirectLink | null>;
 
 export function createLinkRecordRepository(prismaCreateLink: PrismaCreateLink) {
   return async function createLinkRecord(
@@ -69,6 +78,16 @@ export function createDeleteOwnedLinkRepository(
     if (result.count === 0) {
       throw new LinkNotFoundError();
     }
+  };
+}
+
+export function createFindRedirectBySlugRepository(
+  _prismaFindRedirect: PrismaFindRedirect,
+) {
+  return async function findRedirectBySlug(
+    _slug: string,
+  ): Promise<RedirectLink | null> {
+    return null;
   };
 }
 

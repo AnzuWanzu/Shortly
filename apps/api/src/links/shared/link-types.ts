@@ -16,3 +16,7 @@ export type CreateOwnedLinkInput = {
   originalUrl: string;
   userId: string;
 };
+
+export type RedirectLink = {
+  originalUrl: string;
+};
