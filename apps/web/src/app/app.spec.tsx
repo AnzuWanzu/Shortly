@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { afterEach, vi } from 'vitest';
 
@@ -9,7 +9,17 @@ afterEach(() => {
 });
 
 describe('App', () => {
-  it('shows the login screen at the public login route', () => {
+  it('shows the login screen at the public login route', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: { code: 'UNAUTHENTICATED', message: 'Authentication required' },
+        }),
+        { status: 401, headers: { 'content-type': 'application/json' } },
+      ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
     render(
       <MemoryRouter initialEntries={['/login']}>
         <App />
@@ -19,6 +29,7 @@ describe('App', () => {
     expect(
       screen.getByRole('heading', { name: 'Welcome back' }),
     ).toBeTruthy();
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
   });
 
   it('shows the shortening workspace for an authenticated user', async () => {
