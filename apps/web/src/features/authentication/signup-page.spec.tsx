@@ -42,7 +42,7 @@ it('creates an account and sends the user to login', async () => {
 
   await user.type(screen.getByLabelText('Full name'), '  Anzu  ');
   await user.type(screen.getByLabelText('Email address'), '  ANZU@example.com  ');
-  await user.type(screen.getByLabelText('Password'), 'correct horse battery staple');
+  await user.type(screen.getByLabelText('Password'), 'eight888');
   await user.click(screen.getByRole('button', { name: 'Create account' }));
 
   expect(
@@ -55,7 +55,7 @@ it('creates an account and sends the user to login', async () => {
       body: JSON.stringify({
         email: 'anzu@example.com',
         displayName: 'Anzu',
-        password: 'correct horse battery staple',
+        password: 'eight888',
       }),
     }),
   );
