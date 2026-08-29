@@ -14,15 +14,9 @@ export function AuthLayout({ children }: { children: ReactNode }) {
             <div className="mb-8 grid size-24 place-items-center border border-violet bg-surface text-violet shadow-panel">
               <Link2 className="size-11" strokeWidth={1.5} aria-hidden />
             </div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-violet">
-              One link, less friction
-            </p>
-            <h2 className="mt-4 text-4xl font-semibold leading-tight tracking-[-0.04em] text-ink">
-              Keep useful destinations within reach.
+            <h2 className="text-4xl font-semibold leading-tight tracking-[-0.04em] text-ink">
+              One Link, Shorten that Bitch
             </h2>
-            <p className="mt-4 max-w-xs text-sm leading-6 text-muted">
-              Shorten, organize, and revisit the links that matter without a crowded workspace.
-            </p>
           </div>
           <div className="flex gap-6 text-xs font-medium text-muted">
             <span className="inline-flex items-center gap-2">
