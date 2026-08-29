@@ -13,7 +13,10 @@ const envSchema = z.object({
     protocol: /^postgresql$/,
   }),
 
-  COOKIE_SECURE: z.unknown().optional(),
+  COOKIE_SECURE: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
 });
 
 export function parseEnv(input: NodeJS.ProcessEnv) {
