@@ -10,6 +10,7 @@ import {
 } from '../../src/auth/session/session-router';
 import { createPrismaClient } from '../../src/database/prisma';
 import { composeLinks } from '../../src/links/management/link-composition';
+import { composeRedirect } from '../../src/links/redirect/redirect-composition';
 
 const databaseUrl = process.env['DATABASE_URL_TEST'];
 
@@ -29,6 +30,7 @@ const app = createApp({
   ...authDependencies,
   secureCookies: false,
   linkDependencies: composeLinks(prisma),
+  redirectDependencies: composeRedirect(prisma),
 });
 const createdEmails = new Set<string>();
 
@@ -84,6 +86,13 @@ describe('server-side link ownership', () => {
     expect(createResponse.status).toBe(201);
     expect(createResponse.body.link.userId).toBe(owner.user.id);
     const linkId: string = createResponse.body.link.id;
+    const slug: string = createResponse.body.link.slug;
+
+    const publicRedirect = await request(app).get(`/r/${slug}`);
+    expect(publicRedirect.status).toBe(302);
+    expect(publicRedirect.headers.location).toBe(
+      'https://example.com/owned-by-user-a',
+    );
 
     const otherUserList = await otherUser.agent.get('/links');
     expect(otherUserList.status).toBe(200);

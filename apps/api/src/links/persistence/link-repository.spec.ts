@@ -7,6 +7,7 @@ import {
   createLinkRecordRepository,
   createListOwnedLinksRepository,
   createDeleteOwnedLinkRepository,
+  createFindRedirectBySlugRepository,
 } from './link-repository';
 
 describe('link repositories', () => {
@@ -105,5 +106,18 @@ describe('link repositories', () => {
         userId: 'different-user',
       }),
     ).rejects.toBeInstanceOf(LinkNotFoundError);
+  });
+
+  it('finds only the destination needed for a public redirect', async () => {
+    const destination = { originalUrl: 'https://example.com/articles/42' };
+    const prismaFindRedirect = vi.fn(async () => destination);
+    const findRedirectBySlug =
+      createFindRedirectBySlugRepository(prismaFindRedirect);
+
+    await expect(findRedirectBySlug('abc123XY')).resolves.toEqual(destination);
+    expect(prismaFindRedirect).toHaveBeenCalledWith({
+      where: { slug: 'abc123XY' },
+      select: { originalUrl: true },
+    });
   });
 });
