@@ -50,7 +50,7 @@ it('creates a short link and shows it in recent links', async () => {
   await user.type(await screen.findByLabelText('Long URL'), longUrl);
   await user.click(screen.getByRole('button', { name: 'Shorten link' }));
 
-  expect(await screen.findByText('sho.rt/abc123XY')).toBeInTheDocument();
+  expect(await screen.findByText(/\/r\/abc123XY$/)).toBeInTheDocument();
   expect(fetchMock).toHaveBeenLastCalledWith(
     '/links',
     expect.objectContaining({
