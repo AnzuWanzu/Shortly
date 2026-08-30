@@ -19,9 +19,15 @@ export function createResolveRedirect(
       throw new LinkNotFoundError();
     }
 
-    const cachedDestination = await dependencies.findCachedDestination(
-      parsedSlug.data,
-    );
+    let cachedDestination: string | null = null;
+
+    try {
+      cachedDestination = await dependencies.findCachedDestination(
+        parsedSlug.data,
+      );
+    } catch {
+      cachedDestination = null;
+    }
 
     if (cachedDestination) {
       return cachedDestination;
