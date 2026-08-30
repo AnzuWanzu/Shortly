@@ -19,17 +19,27 @@ describe('createResolveRedirect', () => {
     );
   });
 
-  it('hides whether a missing or malformed slug ever existed', async () => {
+  it('caches the PostgreSQL destination after a cache miss', async () => {
     const findCachedDestination = vi.fn(async () => null);
-    const findRedirectBySlug = vi.fn(async () => null);
+    const findRedirectBySlug = vi.fn(async () => ({
+      originalUrl: 'https://example.com/from-postgresql',
+    }));
+
+    const cacheDestination = vi.fn(async () => undefined);
 
     const resolveRedirect = createResolveRedirect({
       findCachedDestination,
       findRedirectBySlug,
+      cacheDestination,
     });
 
-    await expect(resolveRedirect('missing1')).rejects.toBeInstanceOf(
-      LinkNotFoundError,
+    await expect(resolveRedirect('abc123XY')).resolves.toBe(
+      'https://example.com/from-postgresql',
+    );
+
+    expect(cacheDestination).toHaveBeenCalledWith(
+      'abc123XY',
+      'https://example.com/from-postgresql',
     );
   });
 
@@ -37,7 +47,6 @@ describe('createResolveRedirect', () => {
     const findCachedDestination = vi.fn(
       async () => 'https://example.com/from-cache',
     );
-
     const findRedirectBySlug = vi.fn(async () => {
       throw new Error('PostgreSQL should not run during a cache hit');
     });
@@ -53,5 +62,19 @@ describe('createResolveRedirect', () => {
 
     expect(findCachedDestination).toHaveBeenCalledWith('abc123XY');
     expect(findRedirectBySlug).not.toHaveBeenCalled();
+  });
+
+  it('hides whether a missing or malformed slug ever existed', async () => {
+    const findCachedDestination = vi.fn(async () => null);
+    const findRedirectBySlug = vi.fn(async () => null);
+
+    const resolveRedirect = createResolveRedirect({
+      findCachedDestination,
+      findRedirectBySlug,
+    });
+
+    await expect(resolveRedirect('missing1')).rejects.toBeInstanceOf(
+      LinkNotFoundError,
+    );
   });
 });
