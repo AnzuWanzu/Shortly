@@ -22,4 +22,26 @@ describe('createResolveRedirect', () => {
       LinkNotFoundError,
     );
   });
+
+  it('returns a cached destination without querying PostgreSQL', async () => {
+    const findCachedDestination = vi.fn(async () => {
+      return 'https://example.com/from-cache';
+    });
+
+    const findRedirectBySlug = vi.fn(async () => {
+      throw new Error('PostgreSQL should not run during a cache hit');
+    });
+
+    const resolveRedirect = createResolveRedirect({
+      findCachedDestination,
+      findRedirectBySlug,
+    });
+
+    await expect(resolveRedirect('abc123XY')).resolves.toBe(
+      'https://example.com/from-cache',
+    );
+
+    expect(findCachedDestination).toHaveBeenCalledWith('abc123XY');
+    expect(findRedirectBySlug).not.toHaveBeenCalled();
+  });
 });
