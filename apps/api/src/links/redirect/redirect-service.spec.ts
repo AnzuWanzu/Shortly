@@ -83,4 +83,24 @@ describe('createResolveRedirect', () => {
       LinkNotFoundError,
     );
   });
+
+  it('falls back to PostgreSQL when the cache read fails', async () => {
+    const findCachedDestination = vi.fn(async () => {
+      throw new Error('Redis unavailable');
+    });
+    const findRedirectBySlug = vi.fn(async () => ({
+      originalUrl: 'https://example.com/from-postgresql',
+    }));
+    const cacheDestination = vi.fn(async () => undefined);
+
+    const resolveRedirect = createResolveRedirect({
+      findCachedDestination,
+      findRedirectBySlug,
+      cacheDestination,
+    });
+
+    await expect(resolveRedirect('abc123XY')).resolves.toBe(
+      'https://example.com/from-postgresql',
+    );
+  });
 });
