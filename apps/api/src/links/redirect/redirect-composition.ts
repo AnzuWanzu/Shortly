@@ -13,6 +13,7 @@ export function composeRedirect(prisma: PrismaClient) {
     resolveRedirect: createResolveRedirect({
       findCachedDestination: async () => null,
       findRedirectBySlug,
+      cacheDestination: async () => undefined,
     }),
   };
 }

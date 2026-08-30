@@ -8,10 +8,12 @@ describe('createResolveRedirect', () => {
     const findRedirectBySlug = vi.fn(async () => ({
       originalUrl: 'https://example.com/articles/42',
     }));
+    const cacheDestination = vi.fn(async () => undefined);
 
     const resolveRedirect = createResolveRedirect({
       findCachedDestination,
       findRedirectBySlug,
+      cacheDestination,
     });
 
     await expect(resolveRedirect('abc123XY')).resolves.toBe(
@@ -50,10 +52,12 @@ describe('createResolveRedirect', () => {
     const findRedirectBySlug = vi.fn(async () => {
       throw new Error('PostgreSQL should not run during a cache hit');
     });
+    const cacheDestination = vi.fn(async () => undefined);
 
     const resolveRedirect = createResolveRedirect({
       findCachedDestination,
       findRedirectBySlug,
+      cacheDestination,
     });
 
     await expect(resolveRedirect('abc123XY')).resolves.toBe(
@@ -67,10 +71,12 @@ describe('createResolveRedirect', () => {
   it('hides whether a missing or malformed slug ever existed', async () => {
     const findCachedDestination = vi.fn(async () => null);
     const findRedirectBySlug = vi.fn(async () => null);
+    const cacheDestination = vi.fn(async () => undefined);
 
     const resolveRedirect = createResolveRedirect({
       findCachedDestination,
       findRedirectBySlug,
+      cacheDestination,
     });
 
     await expect(resolveRedirect('missing1')).rejects.toBeInstanceOf(

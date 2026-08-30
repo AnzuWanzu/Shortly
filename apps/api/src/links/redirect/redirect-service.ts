@@ -5,6 +5,7 @@ import { redirectSlugSchema } from './redirect-schema';
 type RedirectDependencies = {
   findCachedDestination: (slug: string) => Promise<string | null>;
   findRedirectBySlug: (slug: string) => Promise<RedirectLink | null>;
+  cacheDestination: (slug: string, destination: string) => Promise<void>;
 };
 
 export type ResolveRedirect = (slug: string) => Promise<string>;
@@ -30,6 +31,8 @@ export function createResolveRedirect(
     if (!link) {
       throw new LinkNotFoundError();
     }
+
+    await dependencies.cacheDestination(parsedSlug.data, link.originalUrl);
 
     return link.originalUrl;
   };
