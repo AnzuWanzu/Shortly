@@ -38,8 +38,11 @@ export function createResolveRedirect(
       throw new LinkNotFoundError();
     }
 
-    await dependencies.cacheDestination(parsedSlug.data, link.originalUrl);
-
+    try {
+      await dependencies.cacheDestination(parsedSlug.data, link.originalUrl);
+    } catch {
+      // Redis is optional; PostgreSQL already supplied the destination.
+    }
     return link.originalUrl;
   };
 }
