@@ -103,4 +103,24 @@ describe('createResolveRedirect', () => {
       'https://example.com/from-postgresql',
     );
   });
+
+  it('returns the PostgreSQL destination when the cache write fails', async () => {
+    const findCachedDestination = vi.fn(async () => null);
+    const findRedirectBySlug = vi.fn(async () => ({
+      originalUrl: 'https://example.com/from-postgresql',
+    }));
+    const cacheDestination = vi.fn(async () => {
+      throw new Error('Redis unavailable');
+    });
+
+    const resolveRedirect = createResolveRedirect({
+      findCachedDestination,
+      findRedirectBySlug,
+      cacheDestination,
+    });
+
+    await expect(resolveRedirect('abc123XY')).resolves.toBe(
+      'https://example.com/from-postgresql',
+    );
+  });
 });
