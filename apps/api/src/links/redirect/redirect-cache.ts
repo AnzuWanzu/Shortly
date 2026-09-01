@@ -18,15 +18,17 @@ type RedirectCache = {
 
 export function createRedirectCache(
   client: RedirectCacheClient,
-  _config: RedirectCacheConfig,
+  config: RedirectCacheConfig,
 ): RedirectCache {
   return {
     findCachedDestination(slug: string) {
       return client.get(`redirect:${slug}`);
     },
 
-    async cacheDestination() {
-      throw new Error('Not implemented');
+    async cacheDestination(slug: string, destination: string) {
+      await client.set(`redirect:${slug}`, destination, {
+        EX: config.ttlSeconds,
+      });
     },
   };
 }
