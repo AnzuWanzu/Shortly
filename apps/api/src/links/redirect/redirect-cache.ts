@@ -1,17 +1,32 @@
 type RedirectCacheClient = {
   get: (key: string) => Promise<string | null>;
+  set: (
+    key: string,
+    value: string,
+    options: { EX: number },
+  ) => Promise<unknown>;
+};
+
+type RedirectCacheConfig = {
+  ttlSeconds: number;
 };
 
 type RedirectCache = {
   findCachedDestination: (slug: string) => Promise<string | null>;
+  cacheDestination: (slug: string, destination: string) => Promise<void>;
 };
 
 export function createRedirectCache(
   client: RedirectCacheClient,
+  _config: RedirectCacheConfig,
 ): RedirectCache {
   return {
     findCachedDestination(slug: string) {
       return client.get(`redirect:${slug}`);
+    },
+
+    async cacheDestination() {
+      throw new Error('Not implemented');
     },
   };
 }
