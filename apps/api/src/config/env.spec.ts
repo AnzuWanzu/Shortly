@@ -78,4 +78,10 @@ describe('parseEnv', () => {
       parseEnv({ ...validEnv, COOKIE_SECURE: 'sometimes' }),
     ).toThrow();
   });
+
+  it('uses the local Redis URL when REDIS_URL is missing', () => {
+    const config = parseEnv(validEnv);
+
+    expect(config.REDIS_URL).toBe('redis://localhost:6767');
+  });
 });
