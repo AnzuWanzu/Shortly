@@ -7,7 +7,11 @@ type RedirectCache = {
 };
 
 export function createRedirectCache(
-  _client: RedirectCacheClient,
+  client: RedirectCacheClient,
 ): RedirectCache {
-  throw new Error('Not implemented');
+  return {
+    findCachedDestination(slug: string) {
+      return client.get(`redirect:${slug}`);
+    },
+  };
 }
