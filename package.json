@@ -4,6 +4,11 @@
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.19.0",
+  "scripts": {
+    "infra:up": "docker compose --env-file .env --file infrastructure/local/compose.yaml up -d",
+    "infra:down": "docker compose --env-file .env --file infrastructure/local/compose.yaml down",
+    "infra:status": "docker compose --env-file .env --file infrastructure/local/compose.yaml ps"
+  },
   "devDependencies": {
     "@eslint/js": "^9.8.0",
     "@nx/eslint": "23.1.1",
