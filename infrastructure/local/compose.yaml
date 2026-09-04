@@ -20,7 +20,7 @@ services:
   redis:
     image: redis:8.2.9-bookworm
     ports:
-      - '${REDIS_PORT:-6767}:6767'
+      - '${REDIS_PORT:-6767}:6379'
     healthcheck:
       test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
