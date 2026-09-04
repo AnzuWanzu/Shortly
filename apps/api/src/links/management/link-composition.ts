@@ -4,14 +4,18 @@ import {
   createLinkRecordRepository,
   createListOwnedLinksRepository,
 } from '../persistence/link-repository';
-import { createCreateOwnedLink } from './link-service';
+import type { RedirectCache } from '../redirect/redirect-cache';
+import { createCreateOwnedLink, createDeleteOwnedLink } from './link-service';
 import { createSlug } from './slug';
 
 const MAX_SLUG_ATTEMPTS = 5;
 
 type PrismaClient = ReturnType<typeof createPrismaClient>;
 
-export function composeLinks(prisma: PrismaClient) {
+export function composeLinks(
+  prisma: PrismaClient,
+  redirectCache: RedirectCache,
+) {
   const createLinkRecord = createLinkRecordRepository((args) =>
     prisma.link.create(args),
   );
@@ -25,8 +29,11 @@ export function composeLinks(prisma: PrismaClient) {
     listOwnedLinks: createListOwnedLinksRepository((args) =>
       prisma.link.findMany(args),
     ),
-    deleteOwnedLink: createDeleteOwnedLinkRepository((args) =>
-      prisma.link.deleteMany(args),
-    ),
+    deleteOwnedLink: createDeleteOwnedLink({
+      deleteLinkRecord: createDeleteOwnedLinkRepository((args) =>
+        prisma.link.delete(args),
+      ),
+      deleteCachedDestination: redirectCache.deleteCachedDestination,
+    }),
   };
 }

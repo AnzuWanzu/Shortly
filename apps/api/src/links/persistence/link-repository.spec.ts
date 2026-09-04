@@ -80,25 +80,30 @@ describe('link repositories', () => {
   });
 
   it('deletes only when both the link and authenticated owner match', async () => {
-    const prismaDeleteLinks = vi.fn(async () => ({ count: 1 }));
-    const deleteOwnedLink = createDeleteOwnedLinkRepository(prismaDeleteLinks);
+    const prismaDeleteLink = vi.fn(async () => ({ slug: 'abc123XY' }));
+    const deleteOwnedLink = createDeleteOwnedLinkRepository(prismaDeleteLink);
 
-    await deleteOwnedLink({
-      linkId: '8ef22366-a9ce-4ebd-8c11-59779bcd66f4',
-      userId: 'user-123',
-    });
+    await expect(
+      deleteOwnedLink({
+        linkId: '8ef22366-a9ce-4ebd-8c11-59779bcd66f4',
+        userId: 'user-123',
+      }),
+    ).resolves.toEqual({ slug: 'abc123XY' });
 
-    expect(prismaDeleteLinks).toHaveBeenCalledWith({
+    expect(prismaDeleteLink).toHaveBeenCalledWith({
       where: {
         id: '8ef22366-a9ce-4ebd-8c11-59779bcd66f4',
         userId: 'user-123',
       },
+      select: { slug: true },
     });
   });
 
   it('returns the same not-found error for missing and cross-user links', async () => {
-    const prismaDeleteLinks = vi.fn(async () => ({ count: 0 }));
-    const deleteOwnedLink = createDeleteOwnedLinkRepository(prismaDeleteLinks);
+    const prismaDeleteLink = vi.fn(async () => {
+      throw { code: 'P2025' };
+    });
+    const deleteOwnedLink = createDeleteOwnedLinkRepository(prismaDeleteLink);
 
     await expect(
       deleteOwnedLink({

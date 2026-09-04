@@ -1,5 +1,6 @@
 type RedirectCacheClient = {
   get: (key: string) => Promise<unknown>;
+  del: (key: string) => Promise<unknown>;
   set: (
     key: string,
     value: string,
@@ -11,9 +12,10 @@ type RedirectCacheConfig = {
   ttlSeconds: number;
 };
 
-type RedirectCache = {
+export type RedirectCache = {
   findCachedDestination: (slug: string) => Promise<string | null>;
   cacheDestination: (slug: string, destination: string) => Promise<void>;
+  deleteCachedDestination: (slug: string) => Promise<void>;
 };
 
 export function createRedirectCache(
@@ -31,6 +33,10 @@ export function createRedirectCache(
       await client.set(`redirect:${slug}`, destination, {
         EX: config.ttlSeconds,
       });
+    },
+
+    async deleteCachedDestination(slug: string) {
+      await client.del(`redirect:${slug}`);
     },
   };
 }

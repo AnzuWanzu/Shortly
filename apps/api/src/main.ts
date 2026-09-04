@@ -8,6 +8,7 @@ import { createPrismaClient } from './database/prisma';
 import { composeLinks } from './links/management/link-composition';
 import { composeRedirect } from './links/redirect/redirect-composition';
 import { createRedisClient } from './cache/redis';
+import { createRedirectCache } from './links/redirect/redirect-cache';
 
 const {
   PORT: port,
@@ -23,6 +24,9 @@ const redis = createRedisClient(redisUrl, (error) => {
   console.warn(`Redis client error: ${error.message}`);
 });
 void redis.connect().catch(() => undefined);
+const redirectCache = createRedirectCache(redis, {
+  ttlSeconds: redirectCacheTTLSeconds,
+});
 const checkDatabase = async () => {
   await prisma.$queryRaw`SELECT 1`;
 };
@@ -38,8 +42,8 @@ const app = createApp({
   ...authDependencies,
   secureCookies,
   profileDependencies: composeProfile(prisma),
-  linkDependencies: composeLinks(prisma),
-  redirectDependencies: composeRedirect(prisma, redis, redirectCacheTTLSeconds),
+  linkDependencies: composeLinks(prisma, redirectCache),
+  redirectDependencies: composeRedirect(prisma, redirectCache),
 });
 
 const server = app.listen(port, () => {

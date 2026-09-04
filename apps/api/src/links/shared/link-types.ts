@@ -20,3 +20,7 @@ export type CreateOwnedLinkInput = {
 export type RedirectLink = {
   originalUrl: string;
 };
+
+export type DeletedLink = {
+  slug: string;
+};

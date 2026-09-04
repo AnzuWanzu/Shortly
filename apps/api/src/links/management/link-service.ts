@@ -2,6 +2,7 @@ import { SlugAlreadyExistsError } from '../shared/link-errors';
 import type {
   CreateLinkRecordInput,
   CreateOwnedLinkInput,
+  DeletedLink,
   LinkRecord,
 } from '../shared/link-types';
 
@@ -9,6 +10,16 @@ type CreateOwnedLinkDependencies = {
   createLinkRecord: (input: CreateLinkRecordInput) => Promise<LinkRecord>;
   createSlug: () => string;
   maxSlugAttempts: number;
+};
+
+type DeleteOwnedLinkInput = {
+  linkId: string;
+  userId: string;
+};
+
+type DeleteOwnedLinkDependencies = {
+  deleteLinkRecord: (input: DeleteOwnedLinkInput) => Promise<DeletedLink>;
+  deleteCachedDestination: (slug: string) => Promise<void>;
 };
 
 export function createCreateOwnedLink(
@@ -38,5 +49,19 @@ export function createCreateOwnedLink(
     }
 
     throw new Error('Unable to generate a unique slug');
+  };
+}
+
+export function createDeleteOwnedLink(
+  dependencies: DeleteOwnedLinkDependencies,
+) {
+  return async function deleteOwnedLink(input: DeleteOwnedLinkInput) {
+    const deletedLink = await dependencies.deleteLinkRecord(input);
+
+    try {
+      await dependencies.deleteCachedDestination(deletedLink.slug);
+    } catch {
+      // PostgreSQL is authoritative; a Redis outage must not undo the deletion.
+    }
   };
 }
