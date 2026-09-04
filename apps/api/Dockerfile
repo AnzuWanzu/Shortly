@@ -6,9 +6,21 @@ RUN corepack enable
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml nx.json tsconfig.base.json ./
 COPY apps/api ./apps/api
+COPY prisma ./prisma
+COPY prisma7.config.ts ./prisma7.config.ts
 
 RUN pnpm install --frozen-lockfile
 RUN pnpm nx build api
+
+FROM build AS migrate
+
+ENV NODE_ENV=production
+
+RUN chmod -R a+rX package.json pnpm-workspace.yaml prisma7.config.ts prisma
+
+USER node
+
+CMD ["pnpm", "exec", "prisma", "migrate", "deploy", "--config", "prisma7.config.ts"]
 
 FROM node:24-bookworm-slim AS runtime
 
