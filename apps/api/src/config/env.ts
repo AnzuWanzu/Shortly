@@ -17,6 +17,14 @@ const envSchema = z.object({
     .enum(['true', 'false'])
     .default('false')
     .transform((value) => value === 'true'),
+
+  REDIS_URL: z
+    .url({
+      protocol: /^rediss?$/,
+    })
+    .default('redis://localhost:6767'),
+
+  REDIRECT_CACHE_TTL_SECONDS: z.coerce.number().int().positive().default(300),
 });
 
 export function parseEnv(input: NodeJS.ProcessEnv) {

@@ -78,4 +78,38 @@ describe('parseEnv', () => {
       parseEnv({ ...validEnv, COOKIE_SECURE: 'sometimes' }),
     ).toThrow();
   });
+
+  it('uses the local Redis URL when REDIS_URL is missing', () => {
+    const config = parseEnv(validEnv);
+
+    expect(config.REDIS_URL).toBe('redis://localhost:6767');
+  });
+
+  it('uses the default redirect cache TTL when it is missing', () => {
+    const config = parseEnv(validEnv);
+
+    expect(config.REDIRECT_CACHE_TTL_SECONDS).toBe(300);
+  });
+
+  it('converts the configured redirect cache TTL into a number', () => {
+    const config = parseEnv({
+      ...validEnv,
+      REDIRECT_CACHE_TTL_SECONDS: '600',
+    });
+
+    expect(config.REDIRECT_CACHE_TTL_SECONDS).toBe(600);
+    expect(typeof config.REDIRECT_CACHE_TTL_SECONDS).toBe('number');
+  });
+
+  it.each(['0', '-1', '30.5', 'banana'])(
+    'rejects invalid redirect cache TTL value %s',
+    (ttl) => {
+      expect(() =>
+        parseEnv({
+          ...validEnv,
+          REDIRECT_CACHE_TTL_SECONDS: ttl,
+        }),
+      ).toThrow();
+    },
+  );
 });

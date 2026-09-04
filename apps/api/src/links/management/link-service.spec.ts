@@ -1,6 +1,6 @@
 import { vi } from 'vitest';
 import { SlugAlreadyExistsError } from '../shared/link-errors';
-import { createCreateOwnedLink } from './link-service';
+import { createCreateOwnedLink, createDeleteOwnedLink } from './link-service';
 
 describe('createOwnedLink', () => {
   it('assigns ownership from the authenticated user, not request data', async () => {
@@ -58,5 +58,39 @@ describe('createOwnedLink', () => {
       }),
     ).resolves.toMatchObject({ slug: 'secondXY' });
     expect(createLinkRecord).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('deleteOwnedLink', () => {
+  const input = {
+    linkId: '8ef22366-a9ce-4ebd-8c11-59779bcd66f4',
+    userId: 'user-123',
+  };
+
+  it('invalidates the redirect cache using the deleted link slug', async () => {
+    const deleteLinkRecord = vi.fn(async () => ({ slug: 'abc123XY' }));
+    const deleteCachedDestination = vi.fn(async () => undefined);
+    const deleteOwnedLink = createDeleteOwnedLink({
+      deleteLinkRecord,
+      deleteCachedDestination,
+    });
+
+    await deleteOwnedLink(input);
+
+    expect(deleteLinkRecord).toHaveBeenCalledWith(input);
+    expect(deleteCachedDestination).toHaveBeenCalledWith('abc123XY');
+  });
+
+  it('keeps the database deletion successful when Redis is unavailable', async () => {
+    const deleteLinkRecord = vi.fn(async () => ({ slug: 'abc123XY' }));
+    const deleteCachedDestination = vi.fn(async () => {
+      throw new Error('Redis unavailable');
+    });
+    const deleteOwnedLink = createDeleteOwnedLink({
+      deleteLinkRecord,
+      deleteCachedDestination,
+    });
+
+    await expect(deleteOwnedLink(input)).resolves.toBeUndefined();
   });
 });

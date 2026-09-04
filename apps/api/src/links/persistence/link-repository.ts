@@ -4,6 +4,7 @@ import {
 } from '../shared/link-errors';
 import type {
   CreateLinkRecordInput,
+  DeletedLink,
   LinkRecord,
   RedirectLink,
 } from '../shared/link-types';
@@ -27,9 +28,10 @@ type PrismaFindLinks = (args: {
   select: typeof linkSelection;
 }) => Promise<LinkRecord[]>;
 
-type PrismaDeleteLinks = (args: {
+type PrismaDeleteLink = (args: {
   where: { id: string; userId: string };
-}) => Promise<{ count: number }>;
+  select: { slug: true };
+}) => Promise<DeletedLink>;
 
 type PrismaFindRedirect = (args: {
   where: { slug: string };
@@ -65,18 +67,23 @@ export function createListOwnedLinksRepository(
 }
 
 export function createDeleteOwnedLinkRepository(
-  prismaDeleteLinks: PrismaDeleteLinks,
+  prismaDeleteLink: PrismaDeleteLink,
 ) {
   return async function deleteOwnedLink(input: {
     linkId: string;
     userId: string;
-  }): Promise<void> {
-    const result = await prismaDeleteLinks({
-      where: { id: input.linkId, userId: input.userId },
-    });
+  }): Promise<DeletedLink> {
+    try {
+      return await prismaDeleteLink({
+        where: { id: input.linkId, userId: input.userId },
+        select: { slug: true },
+      });
+    } catch (error) {
+      if (isErrorWithCode(error, 'P2025')) {
+        throw new LinkNotFoundError();
+      }
 
-    if (result.count === 0) {
-      throw new LinkNotFoundError();
+      throw error;
     }
   };
 }
