@@ -6,17 +6,27 @@ RUN corepack enable
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml nx.json tsconfig.base.json ./
 COPY apps/api ./apps/api
-COPY prisma ./prisma
-COPY prisma7.config.ts ./prisma7.config.ts
 
 RUN pnpm install --frozen-lockfile
 RUN pnpm nx build api
 
-FROM build AS migrate
+FROM node:24-bookworm-slim AS migrate
 
 ENV NODE_ENV=production
+WORKDIR /workspace
 
-RUN chmod -R a+rX package.json pnpm-workspace.yaml prisma7.config.ts prisma
+RUN apt-get update \
+  && apt-get install --yes --no-install-recommends openssl \
+  && rm -rf /var/lib/apt/lists/* \
+  && corepack enable
+
+COPY --chmod=644 infrastructure/migrations/package.json infrastructure/migrations/pnpm-lock.yaml infrastructure/migrations/pnpm-workspace.yaml ./
+RUN pnpm install --prod --frozen-lockfile
+
+COPY --chmod=644 prisma7.config.ts ./prisma7.config.ts
+COPY --chmod=755 prisma ./prisma
+
+RUN chmod -R a+rX prisma
 
 USER node
 
