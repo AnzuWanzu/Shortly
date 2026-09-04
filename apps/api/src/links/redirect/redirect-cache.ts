@@ -1,5 +1,5 @@
 type RedirectCacheClient = {
-  get: (key: string) => Promise<string | null>;
+  get: (key: string) => Promise<unknown>;
   set: (
     key: string,
     value: string,
@@ -21,8 +21,10 @@ export function createRedirectCache(
   config: RedirectCacheConfig,
 ): RedirectCache {
   return {
-    findCachedDestination(slug: string) {
-      return client.get(`redirect:${slug}`);
+    async findCachedDestination(slug: string) {
+      const destination = await client.get(`redirect:${slug}`);
+
+      return typeof destination === 'string' ? destination : null;
     },
 
     async cacheDestination(slug: string, destination: string) {
