@@ -7,15 +7,22 @@ import { parseEnv } from './config/env';
 import { createPrismaClient } from './database/prisma';
 import { composeLinks } from './links/management/link-composition';
 import { composeRedirect } from './links/redirect/redirect-composition';
+import { createRedisClient } from './cache/redis';
 
 const {
   PORT: port,
   WEB_ORIGIN: webOrigin,
   DATABASE_URL: databaseUrl,
   COOKIE_SECURE: secureCookies,
+  REDIS_URL: redisUrl,
+  REDIRECT_CACHE_TTL_SECONDS: redirectCacheTTLSeconds,
 } = parseEnv(process.env);
 
 const prisma = createPrismaClient(databaseUrl);
+const redis = createRedisClient(redisUrl, (error) => {
+  console.warn(`Redis client error: ${error.message}`);
+});
+void redis.connect().catch(() => undefined);
 const checkDatabase = async () => {
   await prisma.$queryRaw`SELECT 1`;
 };
@@ -32,7 +39,7 @@ const app = createApp({
   secureCookies,
   profileDependencies: composeProfile(prisma),
   linkDependencies: composeLinks(prisma),
-  redirectDependencies: composeRedirect(prisma),
+  redirectDependencies: composeRedirect(prisma, redis, redirectCacheTTLSeconds),
 });
 
 const server = app.listen(port, () => {
