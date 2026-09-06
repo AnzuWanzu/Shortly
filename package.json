@@ -8,7 +8,21 @@
     "infra:up": "docker compose --env-file .env --file infrastructure/local/compose.yaml up -d",
     "infra:down": "docker compose --env-file .env --file infrastructure/local/compose.yaml down",
     "infra:status": "docker compose --env-file .env --file infrastructure/local/compose.yaml ps",
-    "dev:api": "nx serve api"
+    "dev": "nx run-many -t serve -p api web --parallel=2",
+    "dev:api": "nx serve api",
+    "dev:web": "nx dev web",
+    "test": "nx run-many -t test -p api web",
+    "test:api": "nx test api",
+    "test:web": "nx test web",
+    "lint": "nx run-many -t lint -p api web",
+    "lint:api": "nx lint api",
+    "lint:web": "nx lint web",
+    "typecheck": "nx run-many -t typecheck -p api web",
+    "typecheck:api": "nx typecheck api",
+    "typecheck:web": "nx typecheck web",
+    "build": "nx run-many -t build -p api web",
+    "build:api": "nx build api",
+    "build:web": "nx build web"
   },
   "devDependencies": {
     "@eslint/js": "^9.8.0",
