@@ -27,15 +27,17 @@ private and never commit credentials.
 Run these from the repository root. The package scripts delegate to Nx, keeping
 its existing targets and caching.
 
-| Command              | What it runs                             |
-| -------------------- | ---------------------------------------- |
-| `pnpm run dev`       | API and web development servers together |
-| `pnpm run dev:api`   | API development server only              |
-| `pnpm run dev:web`   | Web development server only              |
-| `pnpm run test`      | API and web unit/component tests         |
-| `pnpm run lint`      | API and web lint checks                  |
-| `pnpm run typecheck` | API and web TypeScript checks            |
-| `pnpm run build`     | API and web builds                       |
+| Command               | What it runs                             |
+| --------------------- | ---------------------------------------- |
+| `pnpm run infra:up`   | PostgreSQL and Redis containers only     |
+| `pnpm run infra:down` | Stops the local container infrastructure |
+| `pnpm run dev`        | API and web development servers together |
+| `pnpm run dev:api`    | API development server only              |
+| `pnpm run dev:web`    | Web development server only              |
+| `pnpm run test`       | API and web unit/component tests         |
+| `pnpm run lint`       | API and web lint checks                  |
+| `pnpm run typecheck`  | API and web TypeScript checks            |
+| `pnpm run build`      | API and web builds                       |
 
 For checks on one app, append `:api` or `:web`, for example
 `pnpm run test:api` or `pnpm run lint:web`. Database integration tests remain
@@ -45,7 +47,7 @@ Development servers require the configured PostgreSQL and Redis services. Start
 only those services when developing on the host:
 
 ```sh
-docker compose --env-file .env --file infrastructure/local/compose.yaml up -d postgres redis
+pnpm run infra:up
 pnpm run dev
 ```
 
@@ -65,10 +67,10 @@ curl --include http://localhost:3333/ready
 
 `/health` checks that the API responds. `/ready` also checks the database.
 
-Use host-reachable database and Redis addresses in `.env`. Stop development
-servers with Ctrl+C. The existing `pnpm run infra:up` starts the full container
-stack, including the API and web; stop that stack before running host development
-servers to avoid port conflicts.
+Use host-reachable database and Redis addresses in `.env`. Stop the Nx development
+servers with Ctrl+C, then stop PostgreSQL and Redis with `pnpm run infra:down`.
+Because `infra:up` does not start the containerized API or web app, Nx remains the
+only process responsible for their development ports.
 
 ## Full Docker stack
 
@@ -76,8 +78,8 @@ This runs PostgreSQL, Redis, migrations, the API, and the built frontend in Dock
 Stop host development servers first.
 
 ```sh
-pnpm run infra:up
-pnpm run infra:status
+pnpm run stack:up
+pnpm run stack:status
 ```
 
 To rebuild images after source changes and wait for readiness:
@@ -90,10 +92,10 @@ Open `http://localhost:4200` with the default ports. Inspect logs or stop the st
 
 ```sh
 docker compose --env-file .env --file infrastructure/local/compose.yaml logs --tail=100 -f api web
-pnpm run infra:down
+pnpm run stack:down
 ```
 
-`infra:down` retains the PostgreSQL named volume. Avoid adding `--volumes` unless
+`stack:down` retains the PostgreSQL named volume. Avoid adding `--volumes` unless
 you intend to erase the local database. The migration container exiting with code
 0 is expected; it is a one-time job.
 
