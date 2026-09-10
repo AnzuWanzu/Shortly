@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: shortly
+data:
+  POSTGRES_USER: shortly
+  POSTGRES_DB: shortly
