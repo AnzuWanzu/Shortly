@@ -29,11 +29,11 @@ its existing targets and caching.
 
 | Command               | What it runs                             |
 | --------------------- | ---------------------------------------- |
-| `pnpm run infra:up`   | PostgreSQL and Redis containers only     |
-| `pnpm run infra:down` | Stops the local container infrastructure |
-| `pnpm run dev`        | API and web development servers together |
-| `pnpm run dev:api`    | API development server only              |
-| `pnpm run dev:web`    | Web development server only              |
+| `pnpm dev:infra:up`   | PostgreSQL and Redis containers only     |
+| `pnpm dev:infra:down` | Stops the local container infrastructure |
+| `pnpm dev`            | API and web development servers together |
+| `pnpm dev:api`        | API development server only              |
+| `pnpm dev:web`        | Web development server only              |
 | `pnpm run test`       | API and web unit/component tests         |
 | `pnpm run lint`       | API and web lint checks                  |
 | `pnpm run typecheck`  | API and web TypeScript checks            |
@@ -47,11 +47,11 @@ Development servers require the configured PostgreSQL and Redis services. Start
 only those services when developing on the host:
 
 ```sh
-pnpm run infra:up
-pnpm run dev
+pnpm dev:infra:up
+pnpm dev
 ```
 
-On the first run, apply the existing database migrations before `pnpm run dev`:
+On the first run, apply the existing database migrations before `pnpm dev`:
 
 ```sh
 pnpm exec prisma migrate deploy --config prisma7.config.ts
@@ -68,9 +68,91 @@ curl --include http://localhost:3333/ready
 `/health` checks that the API responds. `/ready` also checks the database.
 
 Use host-reachable database and Redis addresses in `.env`. Stop the Nx development
-servers with Ctrl+C, then stop PostgreSQL and Redis with `pnpm run infra:down`.
-Because `infra:up` does not start the containerized API or web app, Nx remains the
-only process responsible for their development ports.
+servers with Ctrl+C, then stop PostgreSQL and Redis with `pnpm dev:infra:down`.
+Because `dev:infra:up` does not start the containerized API or web app, Nx remains
+the only process responsible for their development ports.
+
+The shorter development commands delegate to the full Compose commands:
+
+| Shortcut                | Full command                                                                                   |
+| ----------------------- | ---------------------------------------------------------------------------------------------- |
+| `pnpm dev:infra:up`     | `docker compose --env-file .env --file infrastructure/local/compose.yaml up -d postgres redis` |
+| `pnpm dev:infra:down`   | `docker compose --env-file .env --file infrastructure/local/compose.yaml down`                 |
+| `pnpm dev:infra:status` | `docker compose --env-file .env --file infrastructure/local/compose.yaml ps postgres redis`    |
+
+## Kubernetes development with kind
+
+Use these shortcuts while testing the Kubernetes deployment. Do not also start
+the Compose development infrastructure; Kubernetes runs its own PostgreSQL and
+Redis workloads.
+
+| Shortcut           | Full command                                                                                                                                                    |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm kind:up`     | `docker start shortly-control-plane && kubectl config use-context kind-shortly && kubectl wait --for=condition=Ready node/shortly-control-plane --timeout=120s` |
+| `pnpm kind:down`   | `docker stop shortly-control-plane`                                                                                                                             |
+| `pnpm kind:status` | `kind get clusters && kubectl get nodes && kubectl get deployment,job,pod,service,pvc --namespace shortly`                                                      |
+| `pnpm kind:web`    | `kubectl port-forward --namespace shortly service/web 4200:8080`                                                                                                |
+| `pnpm kind:api`    | `kubectl port-forward --namespace shortly service/api 3333:3333`                                                                                                |
+
+Start a Kubernetes development session with:
+
+```sh
+pnpm kind:up
+pnpm kind:status
+pnpm kind:web
+```
+
+Keep the port-forward terminal open while using `http://localhost:4200`. Stop it
+with Ctrl+C, then preserve the cluster while stopping its Docker node:
+
+```sh
+pnpm kind:down
+```
+
+Create the cluster only on first-time setup:
+
+```sh
+kind create cluster --name shortly --wait 60s
+```
+
+Avoid `kind delete cluster --name shortly` during normal shutdown because it
+deletes the local cluster and its Kubernetes-managed data.
+
+## End-of-day shutdown
+
+Stop any foreground development server or `kubectl port-forward` first with
+Ctrl+C.
+
+After normal Nx development, stop the Compose-managed PostgreSQL and Redis
+containers:
+
+```sh
+pnpm dev:infra:down
+```
+
+After Kubernetes development, stop the kind node while preserving the cluster,
+manifests, Secret, and local persistent volume:
+
+```sh
+pnpm kind:down
+```
+
+If both environments were used during the session, run both shutdown commands:
+
+```sh
+pnpm dev:infra:down
+pnpm kind:down
+```
+
+Confirm that no Shortly containers remain active:
+
+```sh
+docker ps --filter name=shortly
+```
+
+There is no need to stop the Docker daemon manually before shutting down Fedora.
+Do not use `kind delete cluster --name shortly` unless the intention is to erase
+and recreate the local Kubernetes cluster.
 
 ## Full Docker stack
 
