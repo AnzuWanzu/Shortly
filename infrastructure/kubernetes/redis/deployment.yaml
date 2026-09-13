@@ -23,7 +23,6 @@ spec:
             exec:
               command:
                 - redis-cli
-                - CMD
                 - ping
             periodSeconds: 5
             timeoutSeconds: 5
