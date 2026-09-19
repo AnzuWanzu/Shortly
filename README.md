@@ -156,8 +156,11 @@ and recreate the local Kubernetes cluster.
 
 ## Full Docker stack
 
-This runs PostgreSQL, Redis, migrations, the API, and the built frontend in Docker.
+This runs PostgreSQL, Redis, migrations, the API, Kong, and the built frontend in Docker.
 Stop host development servers first.
+
+The built frontend sends backend requests through NGINX → Kong → API.
+Kong uses the same local rate-limit policy as kind; Nx development bypasses it.
 
 ```sh
 pnpm run stack:up
@@ -180,6 +183,19 @@ pnpm run stack:down
 `stack:down` retains the PostgreSQL named volume. Avoid adding `--volumes` unless
 you intend to erase the local database. The migration container exiting with code
 0 is expected; it is a one-time job.
+
+For gateway checks through the **web port**, configuration reload instructions,
+redirect checks, and `429` troubleshooting, see
+[the Kubernetes testing guide](infrastructure/kubernetes/README.md).
+The isolated full-stack regression check is:
+
+```sh
+bash infrastructure/container-tests/application-stack.sh
+```
+
+It uses a separate test project and deletes only that project's disposable
+database volume when finished. Kong's Compose configuration is baked into its
+image, so rebuild after editing `infrastructure/local/kong.yaml`.
 
 ## Checks before committing
 

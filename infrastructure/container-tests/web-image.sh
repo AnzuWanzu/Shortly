@@ -21,8 +21,12 @@ fi
 
 docker run --detach \
   --name "${container_name}" \
+  --add-host 'kong:127.0.0.1' \
   --publish '127.0.0.1::8080' \
   "${image_name}" >/dev/null
+
+# This isolated image test checks static files only. The name above satisfies
+# NGINX startup resolution; application-stack.sh checks the real gateway path.
 
 host_port="$(docker port "${container_name}" 8080/tcp | awk -F: 'NR == 1 { print $NF }')"
 

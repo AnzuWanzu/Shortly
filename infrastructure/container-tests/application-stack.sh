@@ -6,6 +6,11 @@ project_name='shortly-container-test'
 compose_file='infrastructure/local/compose.yaml'
 
 cleanup() {
+  result=$?
+  if [[ "${result}" != '0' ]]; then
+    docker compose --project-name "${project_name}" --env-file .env.example \
+      --file "${compose_file}" logs --tail=30 >&2 || true
+  fi
   docker compose \
     --project-name "${project_name}" \
     --env-file .env.example \
@@ -30,6 +35,11 @@ docker compose \
 curl --fail --silent 'http://127.0.0.1:14200/health' |
   grep --quiet '"status":"ok"'
 
+# A successful API response alone would also pass if NGINX bypassed Kong.
+curl --fail --silent --show-error --dump-header - --output /dev/null \
+  'http://127.0.0.1:14200/health' |
+  grep --ignore-case --quiet '^Via: .*kong/'
+
 curl --fail --silent 'http://127.0.0.1:14200/login' |
   grep --quiet '<div id="root"></div>'
 
@@ -49,3 +59,5 @@ if [[ "${api_user}" == '0' || "${web_user}" == '0' ]]; then
   echo 'Application containers must not run as root.' >&2
   exit 1
 fi
+
+SHORTLY_DISPOSABLE_STACK=1 node infrastructure/container-tests/gateway-flow.mjs

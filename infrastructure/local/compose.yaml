@@ -67,6 +67,26 @@ services:
       timeout: 5s
       retries: 10
       start_period: 5s
+  kong:
+    build:
+      context: ../..
+      dockerfile: infrastructure/local/kong.Dockerfile
+    environment:
+      KONG_DATABASE: 'off'
+      KONG_DECLARATIVE_CONFIG: /kong/declarative/kong.yaml
+      KONG_NGINX_WORKER_PROCESSES: '1'
+      KONG_PROXY_LISTEN: 0.0.0.0:8000
+      KONG_ADMIN_LISTEN: 'off'
+      KONG_STATUS_LISTEN: 0.0.0.0:8100
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'kong', 'health']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
   web:
     build:
       context: ../..
@@ -75,7 +95,7 @@ services:
     ports:
       - '${WEB_PORT:-4200}:8080'
     depends_on:
-      api:
+      kong:
         condition: service_healthy
     healthcheck:
       test: ['CMD', 'wget', '--quiet', '--spider', 'http://127.0.0.1:8080/']
