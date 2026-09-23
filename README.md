@@ -18,7 +18,6 @@ pnpm exec prisma generate --config prisma7.config.ts
 Edit `.env` before starting services. Keep `POSTGRES_PASSWORD` and the password
 in `DATABASE_URL` consistent. For host development, set
 `REDIS_URL=redis://localhost:6767` to match the example's `REDIS_PORT=6767`.
-The current example URL uses port 6379, which is the container's internal port.
 If you change published ports, update the host URLs accordingly. Keep `.env`
 private and never commit credentials.
 
@@ -27,21 +26,23 @@ private and never commit credentials.
 Run these from the repository root. The package scripts delegate to Nx, keeping
 its existing targets and caching.
 
-| Command               | What it runs                             |
-| --------------------- | ---------------------------------------- |
-| `pnpm dev:infra:up`   | PostgreSQL and Redis containers only     |
-| `pnpm dev:infra:down` | Stops the local container infrastructure |
-| `pnpm dev`            | API and web development servers together |
-| `pnpm dev:api`        | API development server only              |
-| `pnpm dev:web`        | Web development server only              |
-| `pnpm run test`       | API and web unit/component tests         |
-| `pnpm run lint`       | API and web lint checks                  |
-| `pnpm run typecheck`  | API and web TypeScript checks            |
-| `pnpm run build`      | API and web builds                       |
+| Command                 | What it runs                             |
+| ----------------------- | ---------------------------------------- |
+| `pnpm dev:infra:up`     | PostgreSQL and Redis containers only     |
+| `pnpm dev:infra:down`   | Stops the local container infrastructure |
+| `pnpm dev`              | API and web development servers together |
+| `pnpm dev:api`          | API development server only              |
+| `pnpm dev:web`          | Web development server only              |
+| `pnpm format:check`     | Repository formatting check              |
+| `pnpm run test`         | API and web unit/component tests         |
+| `pnpm test:integration` | API tests against PostgreSQL and Redis   |
+| `pnpm run lint`         | API and web lint checks                  |
+| `pnpm run typecheck`    | API and web TypeScript checks            |
+| `pnpm run build`        | API and web builds                       |
 
 For checks on one app, append `:api` or `:web`, for example
-`pnpm run test:api` or `pnpm run lint:web`. Database integration tests remain
-separate: `pnpm exec nx run api:integration`.
+`pnpm run test:api` or `pnpm run lint:web`. Integration tests remain separate
+because they require isolated PostgreSQL and Redis services.
 
 Development servers require the configured PostgreSQL and Redis services. Start
 only those services when developing on the host:
@@ -200,6 +201,7 @@ image, so rebuild after editing `infrastructure/local/kong.yaml`.
 ## Checks before committing
 
 ```sh
+pnpm format:check
 pnpm run lint
 pnpm run typecheck
 pnpm run test
@@ -219,6 +221,55 @@ Format only the files you changed, for example:
 ```sh
 pnpm exec prettier --write README.md package.json
 ```
+
+## CI and security gates
+
+Pull requests and pushes targeting `staging` or `main` run the workflow in
+`.github/workflows/ci.yml`. The container-image jobs begin only after every
+quality, integration, and security gate succeeds.
+
+```text
+quality checks ─────────────┐
+PostgreSQL + Redis tests ───┤
+secret scan ────────────────┼──> build API and web images ──> Trivy + SBOM
+dependency review ──────────┤
+CodeQL ─────────────────────┘
+```
+
+The required checks are:
+
+- `Quality / affected` — formatting plus affected lint, typecheck, tests, and builds.
+- `Integration / PostgreSQL + Redis` — migrations and real service integration tests.
+- `Security / secrets` — hard-coded secret detection across Git history.
+- `Security / dependency review` — newly introduced high or critical dependency risk.
+- `Security / CodeQL` — JavaScript and TypeScript static analysis.
+- `Images / API` and `Images / Web` — runtime image construction and scanning.
+
+Trivy blocks every critical image vulnerability and every fixable high or
+critical vulnerability. Unfixed high findings are reported without blocking.
+The workflow retains compact reports and CycloneDX software bills of materials
+for 14 days; it does not publish images or upload image archives.
+
+Run the quality side locally with:
+
+```sh
+pnpm install --frozen-lockfile
+pnpm exec prisma generate --config prisma7.config.ts
+pnpm format:check
+pnpm run lint --skip-nx-cache
+pnpm run typecheck --skip-nx-cache
+pnpm run test --skip-nx-cache
+pnpm run build --skip-nx-cache
+```
+
+For the integration gate, start PostgreSQL and Redis, use a dedicated migrated
+database through `DATABASE_URL_TEST`, set `REDIS_URL_TEST` to the host Redis
+address, then run `pnpm test:integration`. Never use a production database.
+
+GitHub Actions passing only proves that the configured checks completed. In
+particular, a successful CodeQL job means analysis was uploaded successfully;
+repository code-scanning rules determine whether individual alerts block a
+merge.
 
 ## Prisma commands
 
@@ -241,9 +292,10 @@ Use `migrate dev` only against a development database. Use `migrate deploy` to
 apply existing migrations without creating new ones.
 
 API integration tests require a separate, migrated database configured through
-`DATABASE_URL_TEST`. They create and delete test records; never point this URL
-at a production database. With the test database prepared, run:
+`DATABASE_URL_TEST` and Redis configured through `REDIS_URL_TEST`. They create
+and delete test records and cache keys; never point either URL at production.
+With both test services prepared, run:
 
 ```sh
-pnpm exec nx run api:integration
+pnpm test:integration
 ```
