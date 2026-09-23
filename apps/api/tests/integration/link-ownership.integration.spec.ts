@@ -8,17 +8,26 @@ import {
   CSRF_HEADER_NAME,
   CSRF_HEADER_VALUE,
 } from '../../src/auth/session/session-router';
+import { createRedisClient } from '../../src/cache/redis';
 import { createPrismaClient } from '../../src/database/prisma';
 import { composeLinks } from '../../src/links/management/link-composition';
+import { createRedirectCache } from '../../src/links/redirect/redirect-cache';
 import { composeRedirect } from '../../src/links/redirect/redirect-composition';
 
 const databaseUrl = process.env['DATABASE_URL_TEST'];
+const redisUrl = process.env['REDIS_URL_TEST'];
 
 if (!databaseUrl) {
   throw new Error('DATABASE_URL_TEST is required for API integration tests');
 }
 
+if (!redisUrl) {
+  throw new Error('REDIS_URL_TEST is required for API integration tests');
+}
+
 const prisma = createPrismaClient(databaseUrl);
+const redis = createRedisClient(redisUrl, () => undefined);
+const redirectCache = createRedirectCache(redis, { ttlSeconds: 300 });
 const authDependencies = {
   ...composeRegistration(prisma),
   ...composeLogin(prisma),
@@ -29,24 +38,35 @@ const app = createApp({
   checkDatabase: async () => undefined,
   ...authDependencies,
   secureCookies: false,
-  linkDependencies: composeLinks(prisma),
-  redirectDependencies: composeRedirect(prisma),
+  linkDependencies: composeLinks(prisma, redirectCache),
+  redirectDependencies: composeRedirect(prisma, redirectCache),
 });
 const createdEmails = new Set<string>();
+const createdSlugs = new Set<string>();
+
+beforeAll(async () => {
+  await redis.connect();
+});
 
 afterEach(async () => {
-  if (createdEmails.size === 0) {
-    return;
+  if (createdEmails.size > 0) {
+    await prisma.user.deleteMany({
+      where: { email: { in: [...createdEmails] } },
+    });
+    createdEmails.clear();
   }
 
-  await prisma.user.deleteMany({
-    where: { email: { in: [...createdEmails] } },
-  });
-  createdEmails.clear();
+  await Promise.all(
+    [...createdSlugs].map((slug) =>
+      redirectCache.deleteCachedDestination(slug),
+    ),
+  );
+  createdSlugs.clear();
 });
 
 afterAll(async () => {
   await prisma.$disconnect();
+  await redis.quit();
 });
 
 async function createLoggedInUser(label: string) {
@@ -87,10 +107,16 @@ describe('server-side link ownership', () => {
     expect(createResponse.body.link.userId).toBe(owner.user.id);
     const linkId: string = createResponse.body.link.id;
     const slug: string = createResponse.body.link.slug;
+    createdSlugs.add(slug);
+
+    await expect(redirectCache.findCachedDestination(slug)).resolves.toBeNull();
 
     const publicRedirect = await request(app).get(`/r/${slug}`);
     expect(publicRedirect.status).toBe(302);
     expect(publicRedirect.headers.location).toBe(
+      'https://example.com/owned-by-user-a',
+    );
+    await expect(redirectCache.findCachedDestination(slug)).resolves.toBe(
       'https://example.com/owned-by-user-a',
     );
 
@@ -109,5 +135,6 @@ describe('server-side link ownership', () => {
       .set(CSRF_HEADER_NAME, CSRF_HEADER_VALUE);
     expect(ownerDelete.status).toBe(204);
     await expect(prisma.link.count({ where: { id: linkId } })).resolves.toBe(0);
+    await expect(redirectCache.findCachedDestination(slug)).resolves.toBeNull();
   });
 });
