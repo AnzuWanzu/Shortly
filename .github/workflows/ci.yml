@@ -1,0 +1,107 @@
+name: CI and security gates
+
+on:
+  pull_request:
+    branches: [staging, main]
+  push:
+    branches: [staging, main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Quality / affected
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Check out the complete repository history
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm and Node.js
+        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+
+      - name: Calculate the affected commit range
+        uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate the Prisma client
+        run: pnpm exec prisma generate --config prisma7.config.ts
+
+      - name: Check formatting
+        run: pnpm exec nx format:check --base="$NX_BASE" --head="$NX_HEAD"
+
+      - name: Check affected projects
+        run: pnpm exec nx affected -t lint,typecheck,test,build --base="$NX_BASE" --head="$NX_HEAD" --parallel=3
+        env:
+          CI: true
+
+  integration:
+    name: Integration / PostgreSQL + Redis
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17.11-bookworm
+        env:
+          POSTGRES_USER: shortly_ci
+          POSTGRES_PASSWORD: shortly_ci_password
+          POSTGRES_DB: shortly_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U shortly_ci -d shortly_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:8.2.9-bookworm
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://shortly_ci:shortly_ci_password@localhost:5432/shortly_test?schema=public
+      DATABASE_URL_TEST: postgresql://shortly_ci:shortly_ci_password@localhost:5432/shortly_test?schema=public
+      REDIS_URL_TEST: redis://localhost:6379
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+
+      - name: Install pnpm and Node.js
+        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate the Prisma client
+        run: pnpm exec prisma generate --config prisma7.config.ts
+
+      - name: Apply database migrations
+        run: pnpm exec prisma migrate deploy --config prisma7.config.ts
+
+      - name: Run API integration tests
+        run: pnpm run test:integration
+        env:
+          CI: true
