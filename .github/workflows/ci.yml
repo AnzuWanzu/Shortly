@@ -1,0 +1,243 @@
+name: CI and security gates
+
+on:
+  pull_request:
+    branches: [staging, main]
+  push:
+    branches: [staging, main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Quality / affected
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Check out the complete repository history
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm and Node.js
+        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+
+      - name: Calculate the affected commit range
+        uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate the Prisma client
+        run: pnpm exec prisma generate --config prisma7.config.ts
+
+      - name: Check formatting
+        run: pnpm exec nx format:check --base="$NX_BASE" --head="$NX_HEAD"
+
+      - name: Check affected projects
+        run: pnpm exec nx affected -t lint,typecheck,test,build --base="$NX_BASE" --head="$NX_HEAD" --parallel=3
+        env:
+          CI: true
+
+  integration:
+    name: Integration / PostgreSQL + Redis
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17.11-bookworm
+        env:
+          POSTGRES_USER: shortly_ci
+          POSTGRES_PASSWORD: shortly_ci_password
+          POSTGRES_DB: shortly_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U shortly_ci -d shortly_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:8.2.9-bookworm
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://shortly_ci:shortly_ci_password@localhost:5432/shortly_test?schema=public
+      DATABASE_URL_TEST: postgresql://shortly_ci:shortly_ci_password@localhost:5432/shortly_test?schema=public
+      REDIS_URL_TEST: redis://localhost:6379
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+
+      - name: Install pnpm and Node.js
+        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate the Prisma client
+        run: pnpm exec prisma generate --config prisma7.config.ts
+
+      - name: Apply database migrations
+        run: pnpm exec prisma migrate deploy --config prisma7.config.ts
+
+      - name: Run API integration tests
+        run: pnpm run test:integration
+        env:
+          CI: true
+
+  secrets:
+    name: Security / secrets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the complete repository history
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          fetch-depth: 0
+
+      - name: Scan Git history for exposed secrets
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: false
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: false
+
+  dependency-review:
+    name: Security / dependency review
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+
+      - name: Review dependency changes
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: high
+
+      - name: Preserve the required check outside pull requests
+        if: github.event_name != 'pull_request'
+        run: echo "Dependency review compares pull-request revisions; no dependency diff exists for this event."
+
+  codeql:
+    name: Security / CodeQL
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@1c5b675653bb5c22dbe9b12b556ec555138e09fd # v4.38.1
+        with:
+          languages: javascript-typescript
+
+      - name: Analyze JavaScript and TypeScript
+        uses: github/codeql-action/analyze@1c5b675653bb5c22dbe9b12b556ec555138e09fd # v4.38.1
+
+  images:
+    name: Images / ${{ matrix.name }}
+    needs: [quality, integration, secrets, dependency-review, codeql]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: API
+            image: shortly-api
+            dockerfile: apps/api/Dockerfile
+          - name: Web
+            image: shortly-web
+            dockerfile: apps/web/Dockerfile
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+
+      - name: Build the runtime image
+        id: build
+        run: >-
+          docker build
+          --file "${{ matrix.dockerfile }}"
+          --target runtime
+          --tag "${{ matrix.image }}:ci-${{ github.sha }}"
+          .
+
+      - name: Prepare security reports
+        if: always() && steps.build.outcome == 'success'
+        run: mkdir -p reports
+
+      - name: Block all critical vulnerabilities
+        if: always() && steps.build.outcome == 'success'
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ matrix.image }}:ci-${{ github.sha }}
+          format: table
+          output: reports/${{ matrix.image }}-critical.txt
+          scanners: vuln
+          severity: CRITICAL
+          ignore-unfixed: false
+          exit-code: 1
+
+      - name: Block fixable high and critical vulnerabilities
+        if: always() && steps.build.outcome == 'success'
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ matrix.image }}:ci-${{ github.sha }}
+          format: table
+          output: reports/${{ matrix.image }}-fixable-high-critical.txt
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: 1
+
+      - name: Report every high vulnerability
+        if: always() && steps.build.outcome == 'success'
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ matrix.image }}:ci-${{ github.sha }}
+          format: table
+          output: reports/${{ matrix.image }}-all-high.txt
+          scanners: vuln
+          severity: HIGH
+          ignore-unfixed: false
+          exit-code: 0
+
+      - name: Generate a CycloneDX software bill of materials
+        if: always() && steps.build.outcome == 'success'
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ matrix.image }}:ci-${{ github.sha }}
+          format: cyclonedx
+          output: reports/${{ matrix.image }}-sbom.cdx.json
+          exit-code: 0
+
+      - name: Upload security reports
+        if: always() && steps.build.outcome == 'success'
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: ${{ matrix.image }}-security-reports-${{ github.sha }}
+          path: reports/
+          if-no-files-found: error
+          retention-days: 14
