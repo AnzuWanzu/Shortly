@@ -12,6 +12,8 @@ RUN pnpm nx build web --configuration=production
 
 FROM nginx:1.29-alpine AS runtime
 
+RUN apk upgrade --no-cache
+
 COPY --chmod=644 apps/web/nginx.conf /etc/nginx/nginx.conf
 COPY --from=build --chown=nginx:nginx /workspace/dist/apps/web /usr/share/nginx/html
 
