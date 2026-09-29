@@ -26,6 +26,11 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+  mailpit:
+    image: ghcr.io/axllent/mailpit:v1.31.3@sha256:13de4ffbd28f3089be6dff32afbc8210edb5a593d738fa877ae7272cc73aeb67
+    ports:
+      - '${MAILPIT_SMTP_PORT:-1025}:1025'
+      - '${MAILPIT_UI_PORT:-8025}:8025'
   migrate:
     build:
       context: ../..
@@ -50,11 +55,16 @@ services:
       REDIS_URL: redis://redis:6379
       REDIRECT_CACHE_TTL_SECONDS: ${REDIRECT_CACHE_TTL_SECONDS:-300}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      SMTP_URL: smtp://mailpit:1025
+      EMAIL_FROM: ${EMAIL_FROM:-Shortly <no-reply@shortly.test>}
+      EMAIL_VERIFICATION_SECRET: ${EMAIL_VERIFICATION_SECRET}
     depends_on:
       migrate:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
+      mailpit:
+        condition: service_started
     healthcheck:
       test:
         [

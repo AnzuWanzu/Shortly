@@ -5,9 +5,9 @@
   "type": "module",
   "packageManager": "pnpm@11.19.0",
   "scripts": {
-    "infra:up": "docker compose --env-file .env --file infrastructure/local/compose.yaml up -d postgres redis",
+    "infra:up": "docker compose --env-file .env --file infrastructure/local/compose.yaml up -d postgres redis mailpit",
     "infra:down": "docker compose --env-file .env --file infrastructure/local/compose.yaml down",
-    "infra:status": "docker compose --env-file .env --file infrastructure/local/compose.yaml ps postgres redis",
+    "infra:status": "docker compose --env-file .env --file infrastructure/local/compose.yaml ps postgres redis mailpit",
     "dev:infra:up": "pnpm run infra:up",
     "dev:infra:down": "pnpm run infra:down",
     "dev:infra:status": "pnpm run infra:status",
