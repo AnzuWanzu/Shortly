@@ -1,5 +1,8 @@
 import { vi } from 'vitest';
-import { InvalidCredentialsError } from '../shared/auth-errors';
+import {
+  EmailNotVerifiedError,
+  InvalidCredentialsError,
+} from '../shared/auth-errors';
 import { createLoginUser } from './login-service';
 
 const input = {
@@ -13,6 +16,7 @@ const storedUser = {
   displayName: 'Anzu',
   passwordHash: 'stored-password-hash',
   createdAt: new Date('2026-08-28T00:00:00.000Z'),
+  emailVerifiedAt: new Date('2026-08-28T00:01:00.000Z'),
 };
 
 function createDependencies() {
@@ -81,6 +85,21 @@ describe('loginUser', () => {
       dependencies.dummyPasswordHash,
       input.password,
     );
+    expect(dependencies.createSession).not.toHaveBeenCalled();
+  });
+
+  it('blocks an unverified account only after its password is correct', async () => {
+    const dependencies = createDependencies();
+    dependencies.findUserByEmail.mockResolvedValue({
+      ...storedUser,
+      emailVerifiedAt: null,
+    });
+    const loginUser = createLoginUser(dependencies);
+
+    await expect(loginUser(input)).rejects.toBeInstanceOf(
+      EmailNotVerifiedError,
+    );
+    expect(dependencies.verifyPassword).toHaveBeenCalled();
     expect(dependencies.createSession).not.toHaveBeenCalled();
   });
 });

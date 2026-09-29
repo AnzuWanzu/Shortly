@@ -1,5 +1,8 @@
 import type { LoginInput } from './login-schema';
-import { InvalidCredentialsError } from '../shared/auth-errors';
+import {
+  EmailNotVerifiedError,
+  InvalidCredentialsError,
+} from '../shared/auth-errors';
 
 export const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -9,9 +12,13 @@ export type LoginUserRecord = {
   displayName: string;
   passwordHash: string;
   createdAt: Date;
+  emailVerifiedAt: Date | null;
 };
 
-export type AuthenticatedUser = Omit<LoginUserRecord, 'passwordHash'>;
+export type AuthenticatedUser = Omit<
+  LoginUserRecord,
+  'passwordHash' | 'emailVerifiedAt'
+>;
 
 export type CreateSessionInput = {
   userId: string;
@@ -52,6 +59,10 @@ export function createLoginUser(dependencies: LoginDependencies) {
 
     if (!user || !passwordMatches) {
       throw new InvalidCredentialsError();
+    }
+
+    if (!user.emailVerifiedAt) {
+      throw new EmailNotVerifiedError();
     }
 
     const token = dependencies.createSessionToken();

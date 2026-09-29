@@ -3,6 +3,7 @@ import express from 'express';
 import request from 'supertest';
 import { vi } from 'vitest';
 import {
+  EmailNotVerifiedError,
   InvalidCredentialsError,
   UnauthenticatedError,
 } from '../shared/auth-errors';
@@ -112,6 +113,21 @@ describe('POST /auth/login', () => {
 
     expect(response.status).toBe(403);
     expect(dependencies.loginUser).not.toHaveBeenCalled();
+  });
+
+  it('returns a distinct response for a correctly authenticated unverified account', async () => {
+    const loginUser = vi.fn<LoginUser>(async () => {
+      throw new EmailNotVerifiedError();
+    });
+    const app = createTestApp(createDependencies({ loginUser }));
+
+    const response = await request(app)
+      .post('/auth/login')
+      .set(CSRF_HEADER_NAME, CSRF_HEADER_VALUE)
+      .send({ email: 'anzu@example.com', password: 'correct-password' });
+
+    expect(response.status).toBe(403);
+    expect(response.body.error.code).toBe('EMAIL_NOT_VERIFIED');
   });
 
   it('adds Secure to the cookie only when deployment configuration enables it', async () => {
