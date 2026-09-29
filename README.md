@@ -58,6 +58,29 @@ On the first run, apply the existing database migrations before `pnpm dev`:
 pnpm exec prisma migrate deploy --config prisma7.config.ts
 ```
 
+### Development accounts
+
+Shortly can create two predictable local accounts without placing their
+passwords in Git. Set these values in your private `.env`:
+
+```sh
+ALLOW_DEVELOPMENT_SEED=true
+SEED_DEMO_PASSWORD=choose-a-local-demo-password
+SEED_PENDING_PASSWORD=choose-a-local-pending-password
+```
+
+Then run:
+
+```sh
+pnpm prisma:seed
+```
+
+The command upserts `demo@shortly.test` as a verified account and
+`pending@shortly.test` as an unverified account. It is safe to rerun because it
+updates those two known records rather than creating duplicates. The seed
+refuses to run when `NODE_ENV=production` or when
+`ALLOW_DEVELOPMENT_SEED` is not exactly `true`.
+
 Open `http://localhost:4200`. The API defaults to `http://localhost:3333`;
 the frontend development proxy expects that API port.
 
