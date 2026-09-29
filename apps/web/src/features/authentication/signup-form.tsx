@@ -12,7 +12,11 @@ import { signupFormSchema } from './authentication-schema';
 type FieldName = 'displayName' | 'email' | 'password';
 type FieldErrors = Partial<Record<FieldName, string>>;
 
-export function SignupForm({ onRegistered }: { onRegistered: () => void }) {
+export function SignupForm({
+  onRegistered,
+}: {
+  onRegistered: (email: string, emailSent: boolean) => void;
+}) {
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,8 +38,8 @@ export function SignupForm({ onRegistered }: { onRegistered: () => void }) {
     setFieldErrors({});
     setSubmitting(true);
     try {
-      await register(parsed.data);
-      onRegistered();
+      const result = await register(parsed.data);
+      onRegistered(result.user.email, result.emailSent);
     } catch (error) {
       setFormError(
         error instanceof ApiError

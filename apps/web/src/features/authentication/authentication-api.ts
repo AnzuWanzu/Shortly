@@ -2,17 +2,27 @@ import { apiRequest } from '../../lib/api-client';
 import type { AuthenticatedUser } from '../../types/authentication';
 
 type UserEnvelope = { user: AuthenticatedUser };
+type RegistrationEnvelope = UserEnvelope & {
+  verificationRequired: true;
+  emailSent: boolean;
+};
 
 export type LoginInput = { email: string; password: string };
 export type RegistrationInput = LoginInput & { displayName: string };
 export type VerificationInput = { email: string; code: string };
 
-export async function verifyEmail(_input: VerificationInput): Promise<void> {
-  throw new Error('Not implemented');
+export async function verifyEmail(input: VerificationInput): Promise<void> {
+  await apiRequest<{ verified: true }>('/auth/verify-email', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
 }
 
-export async function resendVerification(_email: string): Promise<void> {
-  throw new Error('Not implemented');
+export async function resendVerification(email: string): Promise<void> {
+  await apiRequest<{ accepted: true }>('/auth/resend-verification', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
 }
 
 export async function getCurrentUser() {
@@ -29,11 +39,10 @@ export async function login(input: LoginInput) {
 }
 
 export async function register(input: RegistrationInput) {
-  const response = await apiRequest<UserEnvelope>('/auth/register', {
+  return apiRequest<RegistrationEnvelope>('/auth/register', {
     method: 'POST',
     body: JSON.stringify(input),
   });
-  return response.user;
 }
 
 export async function logout() {

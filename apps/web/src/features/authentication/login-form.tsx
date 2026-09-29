@@ -14,8 +14,10 @@ type FieldErrors = Partial<Record<'email' | 'password', string>>;
 
 export function LoginForm({
   onAuthenticated,
+  onVerificationRequired,
 }: {
   onAuthenticated: (user: AuthenticatedUser) => void;
+  onVerificationRequired?: (email: string) => void;
 }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -38,6 +40,10 @@ export function LoginForm({
     try {
       onAuthenticated(await login(parsed.data));
     } catch (error) {
+      if (error instanceof ApiError && error.code === 'EMAIL_NOT_VERIFIED') {
+        onVerificationRequired?.(parsed.data.email);
+        return;
+      }
       setFormError(
         error instanceof ApiError
           ? error.message
