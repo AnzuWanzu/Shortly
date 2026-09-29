@@ -18,6 +18,7 @@ pnpm exec prisma generate --config prisma7.config.ts
 Edit `.env` before starting services. Keep `POSTGRES_PASSWORD` and the password
 in `DATABASE_URL` consistent. For host development, set
 `REDIS_URL=redis://localhost:6767` to match the example's `REDIS_PORT=6767`.
+Set a private, random `EMAIL_VERIFICATION_SECRET` of at least 32 characters.
 If you change published ports, update the host URLs accordingly. Keep `.env`
 private and never commit credentials.
 
@@ -28,7 +29,7 @@ its existing targets and caching.
 
 | Command                 | What it runs                             |
 | ----------------------- | ---------------------------------------- |
-| `pnpm dev:infra:up`     | PostgreSQL and Redis containers only     |
+| `pnpm dev:infra:up`     | PostgreSQL, Redis, and Mailpit           |
 | `pnpm dev:infra:down`   | Stops the local container infrastructure |
 | `pnpm dev`              | API and web development servers together |
 | `pnpm dev:api`          | API development server only              |
@@ -44,8 +45,8 @@ For checks on one app, append `:api` or `:web`, for example
 `pnpm run test:api` or `pnpm run lint:web`. Integration tests remain separate
 because they require isolated PostgreSQL and Redis services.
 
-Development servers require the configured PostgreSQL and Redis services. Start
-only those services when developing on the host:
+Development servers require PostgreSQL, Redis, and the local Mailpit email
+inbox. Start those services when developing on the host:
 
 ```sh
 pnpm dev:infra:up
@@ -81,6 +82,17 @@ updates those two known records rather than creating duplicates. The seed
 refuses to run when `NODE_ENV=production` or when
 `ALLOW_DEVELOPMENT_SEED` is not exactly `true`.
 
+### Email verification
+
+New registrations receive a six-digit code that expires after 10 minutes.
+Open Mailpit at `http://localhost:8025` to read local messages, then enter the
+code at `/verify-email`. A code is replaced when another is sent, resends have
+a 60-second cooldown, and five failed attempts invalidate the challenge.
+
+The API stores only an HMAC-SHA256 digest of the code. Keep
+`EMAIL_VERIFICATION_SECRET` out of Git. The account remains pending if SMTP is
+temporarily unavailable, so the user can recover with **Send another code**.
+
 Open `http://localhost:4200`. The API defaults to `http://localhost:3333`;
 the frontend development proxy expects that API port.
 
@@ -98,11 +110,11 @@ the only process responsible for their development ports.
 
 The shorter development commands delegate to the full Compose commands:
 
-| Shortcut                | Full command                                                                                   |
-| ----------------------- | ---------------------------------------------------------------------------------------------- |
-| `pnpm dev:infra:up`     | `docker compose --env-file .env --file infrastructure/local/compose.yaml up -d postgres redis` |
-| `pnpm dev:infra:down`   | `docker compose --env-file .env --file infrastructure/local/compose.yaml down`                 |
-| `pnpm dev:infra:status` | `docker compose --env-file .env --file infrastructure/local/compose.yaml ps postgres redis`    |
+| Shortcut                | Full command                                                                                           |
+| ----------------------- | ------------------------------------------------------------------------------------------------------ |
+| `pnpm dev:infra:up`     | `docker compose --env-file .env --file infrastructure/local/compose.yaml up -d postgres redis mailpit` |
+| `pnpm dev:infra:down`   | `docker compose --env-file .env --file infrastructure/local/compose.yaml down`                         |
+| `pnpm dev:infra:status` | `docker compose --env-file .env --file infrastructure/local/compose.yaml ps postgres redis mailpit`    |
 
 ## Kubernetes development with kind
 
@@ -180,7 +192,7 @@ and recreate the local Kubernetes cluster.
 
 ## Full Docker stack
 
-This runs PostgreSQL, Redis, migrations, the API, Kong, and the built frontend in Docker.
+This runs PostgreSQL, Redis, Mailpit, migrations, the API, Kong, and the built frontend in Docker.
 Stop host development servers first.
 
 The built frontend sends backend requests through NGINX → Kong → API.
