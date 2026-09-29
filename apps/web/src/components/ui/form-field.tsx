@@ -19,7 +19,9 @@ export function FormField({
         {label}
       </label>
       {children}
-      {hint && !error ? <p className="text-xs leading-5 text-muted">{hint}</p> : null}
+      {hint && !error ? (
+        <p className="text-xs leading-5 text-muted">{hint}</p>
+      ) : null}
       {error ? (
         <p id={`${id}-error`} className="text-sm text-danger" role="alert">
           {error}

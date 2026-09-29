@@ -57,7 +57,9 @@ it('searches and deletes an owned link after confirmation', async () => {
   expect(screen.getByText(secondLink.originalUrl)).toBeInTheDocument();
 
   await user.clear(search);
-  await user.click(screen.getByRole('button', { name: 'Delete example.com/first' }));
+  await user.click(
+    screen.getByRole('button', { name: 'Delete example.com/first' }),
+  );
   expect(screen.getByText('Delete this link?')).toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Confirm delete' }));
 

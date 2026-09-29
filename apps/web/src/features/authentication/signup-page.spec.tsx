@@ -15,7 +15,12 @@ it('creates an account and sends the user to login', async () => {
     .fn()
     .mockResolvedValueOnce(
       jsonResponse(
-        { error: { code: 'UNAUTHENTICATED', message: 'Authentication required' } },
+        {
+          error: {
+            code: 'UNAUTHENTICATED',
+            message: 'Authentication required',
+          },
+        },
         401,
       ),
     )
@@ -41,7 +46,10 @@ it('creates an account and sends the user to login', async () => {
   );
 
   await user.type(screen.getByLabelText('Full name'), '  Anzu  ');
-  await user.type(screen.getByLabelText('Email address'), '  ANZU@example.com  ');
+  await user.type(
+    screen.getByLabelText('Email address'),
+    '  ANZU@example.com  ',
+  );
   await user.type(screen.getByLabelText('Password'), 'eight888');
   await user.click(screen.getByRole('button', { name: 'Create account' }));
 
