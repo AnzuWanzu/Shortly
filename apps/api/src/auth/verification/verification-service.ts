@@ -34,9 +34,7 @@ type VerificationDependencies = {
     lastSentAt: Date;
   }) => Promise<void>;
   findUserByEmail: (email: string) => Promise<VerificationUser | null>;
-  findCodeByUserId: (
-    userId: string,
-  ) => Promise<StoredVerificationCode | null>;
+  findCodeByUserId: (userId: string) => Promise<StoredVerificationCode | null>;
   incrementFailedAttempts: (userId: string) => Promise<void>;
   consumeCodeAndVerifyUser: (userId: string, verifiedAt: Date) => Promise<void>;
   deleteCode: (userId: string) => Promise<void>;
@@ -92,9 +90,7 @@ export function createEmailVerificationService(
       throw new EmailVerificationCodeInvalidError();
     }
 
-    if (
-      !dependencies.matchesCode(storedCode.codeDigest, user.id, input.code)
-    ) {
+    if (!dependencies.matchesCode(storedCode.codeDigest, user.id, input.code)) {
       if (storedCode.failedAttempts + 1 >= EMAIL_VERIFICATION_MAX_ATTEMPTS) {
         await dependencies.deleteCode(user.id);
       } else {

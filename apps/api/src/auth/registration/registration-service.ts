@@ -23,9 +23,7 @@ export type RegistrationResult = {
 type RegistrationDependencies = {
   hashPassword: (password: string) => Promise<string>;
   createUser: (input: CreateUserInput) => Promise<CreatedUser>;
-  issueVerification: (
-    user: CreatedUser,
-  ) => Promise<{ emailSent: boolean }>;
+  issueVerification: (user: CreatedUser) => Promise<{ emailSent: boolean }>;
 };
 
 export function createRegisterUser({

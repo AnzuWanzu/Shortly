@@ -20,7 +20,9 @@ export function createVerificationCodeDigester(secret: string) {
     const expected = Buffer.from(expectedDigest, 'hex');
     const actual = Buffer.from(actualDigest, 'hex');
 
-    return expected.length === actual.length && timingSafeEqual(expected, actual);
+    return (
+      expected.length === actual.length && timingSafeEqual(expected, actual)
+    );
   }
 
   return { digestCode, matchesCode };
