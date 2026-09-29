@@ -5,6 +5,15 @@ type UserEnvelope = { user: AuthenticatedUser };
 
 export type LoginInput = { email: string; password: string };
 export type RegistrationInput = LoginInput & { displayName: string };
+export type VerificationInput = { email: string; code: string };
+
+export async function verifyEmail(_input: VerificationInput): Promise<void> {
+  throw new Error('Not implemented');
+}
+
+export async function resendVerification(_email: string): Promise<void> {
+  throw new Error('Not implemented');
+}
 
 export async function getCurrentUser() {
   const response = await apiRequest<UserEnvelope>('/auth/me');
