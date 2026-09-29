@@ -15,7 +15,12 @@ it('logs in with valid credentials and opens the workspace', async () => {
     .fn()
     .mockResolvedValueOnce(
       jsonResponse(
-        { error: { code: 'UNAUTHENTICATED', message: 'Authentication required' } },
+        {
+          error: {
+            code: 'UNAUTHENTICATED',
+            message: 'Authentication required',
+          },
+        },
         401,
       ),
     )
@@ -38,7 +43,10 @@ it('logs in with valid credentials and opens the workspace', async () => {
   );
 
   await user.type(screen.getByLabelText('Email address'), 'anzu@example.com');
-  await user.type(screen.getByLabelText('Password'), 'correct horse battery staple');
+  await user.type(
+    screen.getByLabelText('Password'),
+    'correct horse battery staple',
+  );
   await user.click(screen.getByRole('button', { name: 'Log in' }));
 
   expect(

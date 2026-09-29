@@ -8,7 +8,7 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 export default defineConfig(() => ({
   root: import.meta.dirname,
   cacheDir: '../../node_modules/.vite/apps/web',
-  server:{
+  server: {
     port: 4200,
     host: 'localhost',
     strictPort: true,
@@ -20,7 +20,7 @@ export default defineConfig(() => ({
       '/ready': 'http://localhost:3333',
     },
   },
-  preview:{
+  preview: {
     port: 4200,
     host: 'localhost',
   },
@@ -53,6 +53,6 @@ export default defineConfig(() => ({
     coverage: {
       reportsDirectory: '../../coverage/apps/web',
       provider: 'v8' as const,
-    }
+    },
   },
 }));

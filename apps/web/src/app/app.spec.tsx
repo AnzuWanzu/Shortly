@@ -13,7 +13,10 @@ describe('App', () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(
         JSON.stringify({
-          error: { code: 'UNAUTHENTICATED', message: 'Authentication required' },
+          error: {
+            code: 'UNAUTHENTICATED',
+            message: 'Authentication required',
+          },
         }),
         { status: 401, headers: { 'content-type': 'application/json' } },
       ),
@@ -26,9 +29,7 @@ describe('App', () => {
       </MemoryRouter>,
     );
 
-    expect(
-      screen.getByRole('heading', { name: 'Welcome back' }),
-    ).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Welcome back' })).toBeTruthy();
     await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
   });
 
