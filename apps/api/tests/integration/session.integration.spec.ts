@@ -42,14 +42,19 @@ describe('opaque session lifecycle', () => {
     createdEmails.add(email);
 
     const authDependencies = {
-      ...composeRegistration(prisma),
+      ...composeRegistration(prisma, async () => ({ emailSent: true })),
       ...composeLogin(prisma),
       ...composeSession(prisma),
     };
-    const user = await authDependencies.registerUser({
+    const registration = await authDependencies.registerUser({
       email,
       displayName: 'Session Anzu',
       password,
+    });
+    const user = registration.user;
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { emailVerifiedAt: new Date() },
     });
     const app = createApp({
       webOrigin: 'http://localhost:4200',
