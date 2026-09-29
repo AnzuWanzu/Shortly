@@ -25,6 +25,7 @@ import {
 } from './links/management/link-router';
 import { createRedirectRouter } from './links/redirect/redirect-router';
 import type { ResolveRedirect } from './links/redirect/redirect-service';
+import { createVerificationRouter } from './auth/verification/verification-router';
 
 type LinkDependencies = {
   createOwnedLink: CreateOwnedLink;
@@ -40,6 +41,8 @@ type ProfileDependencies = {
   updateProfile: UpdateProfile;
 };
 
+type VerificationDependencies = Parameters<typeof createVerificationRouter>[0];
+
 type AppConfig = {
   webOrigin: string;
   checkDatabase: () => Promise<void>;
@@ -51,6 +54,7 @@ type AppConfig = {
   linkDependencies?: LinkDependencies;
   redirectDependencies?: RedirectDependencies;
   profileDependencies?: ProfileDependencies;
+  verificationDependencies?: VerificationDependencies;
 };
 
 export function createApp({
@@ -64,6 +68,7 @@ export function createApp({
   linkDependencies,
   redirectDependencies,
   profileDependencies,
+  verificationDependencies,
 }: AppConfig) {
   const app = express();
 
@@ -85,6 +90,9 @@ export function createApp({
 
   //Routes:
   app.use('/auth', createRegistrationRouter({ registerUser }));
+  if (verificationDependencies) {
+    app.use('/auth', createVerificationRouter(verificationDependencies));
+  }
   app.use(
     '/auth',
     createSessionRouter({

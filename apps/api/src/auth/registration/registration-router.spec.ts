@@ -26,10 +26,15 @@ describe('POST /auth/register', () => {
   it('returns a safe created user for valid input', async () => {
     const createdAt = new Date('2026-08-28T00:00:00.000Z');
     const registerUser = vi.fn(async () => ({
-      id: 'user-123',
-      email: 'anzu@example.com',
-      displayName: 'Anzu',
-      createdAt,
+      user: {
+        id: 'user-123',
+        email: 'anzu@example.com',
+        displayName: 'Anzu',
+        createdAt,
+        emailVerifiedAt: null,
+      },
+      verificationRequired: true as const,
+      emailSent: true,
     }));
     const app = createTestApp(registerUser);
 
@@ -49,7 +54,10 @@ describe('POST /auth/register', () => {
         email: 'anzu@example.com',
         displayName: 'Anzu',
         createdAt: createdAt.toISOString(),
+        emailVerifiedAt: null,
       },
+      verificationRequired: true,
+      emailSent: true,
     });
     expect(response.body.user).not.toHaveProperty('passwordHash');
   });

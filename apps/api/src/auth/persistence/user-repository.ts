@@ -12,6 +12,7 @@ type SafeUserSelection = {
   email: true;
   displayName: true;
   createdAt: true;
+  emailVerifiedAt: true;
 };
 
 type PrismaCreateUserArgs = {
@@ -27,6 +28,7 @@ type LoginUserSelection = {
   displayName: true;
   passwordHash: true;
   createdAt: true;
+  emailVerifiedAt: true;
 };
 
 type PrismaFindUserArgs = {
@@ -56,6 +58,7 @@ export function createUserRepository(prismaCreateUser: PrismaCreateUser) {
           email: true,
           displayName: true,
           createdAt: true,
+          emailVerifiedAt: true,
         },
       });
     } catch (error) {
@@ -82,6 +85,7 @@ export function createFindUserByEmailRepository(
         displayName: true,
         passwordHash: true,
         createdAt: true,
+        emailVerifiedAt: true,
       },
     });
   };
@@ -101,6 +105,7 @@ export function createUpdateUserProfileRepository(
         email: true,
         displayName: true,
         createdAt: true,
+        emailVerifiedAt: true,
       },
     });
   };

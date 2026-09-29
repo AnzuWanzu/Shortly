@@ -21,6 +21,7 @@ describe('verificationRouter', () => {
       createTestApp({ verifyEmail, resendVerification: vi.fn() }),
     )
       .post('/auth/verify-email')
+      .set('x-shortly-csrf', '1')
       .send({ email: ' Anzu@Example.com ', code: '123456' });
 
     expect(response.status).toBe(200);
@@ -42,6 +43,7 @@ describe('verificationRouter', () => {
       createTestApp({ verifyEmail, resendVerification: vi.fn() }),
     )
       .post('/auth/verify-email')
+      .set('x-shortly-csrf', '1')
       .send({ email: 'anzu@example.com', code: '999999' });
 
     expect(response.status).toBe(400);
@@ -54,6 +56,7 @@ describe('verificationRouter', () => {
       createTestApp({ verifyEmail: vi.fn(), resendVerification }),
     )
       .post('/auth/resend-verification')
+      .set('x-shortly-csrf', '1')
       .send({ email: 'unknown@example.com' });
 
     expect(response.status).toBe(202);

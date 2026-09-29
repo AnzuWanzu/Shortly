@@ -25,6 +25,10 @@ const envSchema = z.object({
     .default('redis://localhost:6767'),
 
   REDIRECT_CACHE_TTL_SECONDS: z.coerce.number().int().positive().default(300),
+
+  SMTP_URL: z.url({ protocol: /^smtps?$/ }),
+  EMAIL_FROM: z.string().trim().min(1).max(320),
+  EMAIL_VERIFICATION_SECRET: z.string().min(32),
 });
 
 export function parseEnv(input: NodeJS.ProcessEnv) {
