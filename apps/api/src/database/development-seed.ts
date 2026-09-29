@@ -29,8 +29,33 @@ type SeedDependencies = {
 };
 
 export async function seedDevelopmentAccounts(
-  _environment: SeedEnvironment,
-  _dependencies: SeedDependencies,
+  environment: SeedEnvironment,
+  dependencies: SeedDependencies,
 ): Promise<void> {
-  throw new Error('Not implemented');
+  if (
+    environment.allowDevelopmentSeed !== 'true' ||
+    environment.nodeEnv === 'production'
+  ) {
+    throw new Error('Development seeding is disabled');
+  }
+
+  if (!environment.demoPassword || !environment.pendingPassword) {
+    throw new Error('Development seed passwords are required');
+  }
+
+  const [demoPasswordHash, pendingPasswordHash] = await Promise.all([
+    dependencies.hashPassword(environment.demoPassword),
+    dependencies.hashPassword(environment.pendingPassword),
+  ]);
+
+  await dependencies.upsertUser({
+    ...DEVELOPMENT_ACCOUNTS.demo,
+    passwordHash: demoPasswordHash,
+    emailVerifiedAt: new Date(),
+  });
+  await dependencies.upsertUser({
+    ...DEVELOPMENT_ACCOUNTS.pending,
+    passwordHash: pendingPasswordHash,
+    emailVerifiedAt: null,
+  });
 }
