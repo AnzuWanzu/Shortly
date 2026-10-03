@@ -4,6 +4,7 @@ import { ApplicationShell } from '../components/layout/application-shell';
 import { DashboardPage } from '../features/dashboard/dashboard-page';
 import { LoginPage } from '../features/authentication/login-page';
 import { SignupPage } from '../features/authentication/signup-page';
+import { VerifyEmailPage } from '../features/authentication/verify-email-page';
 import { LinksPage } from '../features/links/links-page';
 import { ProfilePage } from '../features/profile/profile-page';
 import { ProtectedRoute } from './protected-route';
@@ -15,6 +16,7 @@ export function AppRouter() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route element={<ProtectedRoute />}>
           <Route element={<ApplicationShell />}>
             <Route index element={<DashboardPage />} />

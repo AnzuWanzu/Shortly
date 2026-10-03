@@ -2,6 +2,9 @@ import { parseEnv } from './env';
 
 const validEnv = {
   DATABASE_URL: 'postgresql://shortly:test-password@localhost:5432/shortly',
+  SMTP_URL: 'smtp://localhost:1025',
+  EMAIL_FROM: 'Shortly <no-reply@shortly.test>',
+  EMAIL_VERIFICATION_SECRET: 'test-secret-that-is-at-least-32-characters',
 };
 
 describe('parseEnv', () => {

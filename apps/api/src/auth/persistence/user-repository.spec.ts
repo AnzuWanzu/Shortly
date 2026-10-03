@@ -20,6 +20,7 @@ describe('createUserRepository', () => {
         email: input.email,
         displayName: input.displayName,
         createdAt: new Date('2026-08-28T00:00:00.000Z'),
+        emailVerifiedAt: null,
       };
     });
 
@@ -34,6 +35,7 @@ describe('createUserRepository', () => {
         email: true,
         displayName: true,
         createdAt: true,
+        emailVerifiedAt: true,
       },
     });
   });
@@ -65,6 +67,7 @@ describe('createFindUserByEmailRepository', () => {
       displayName: 'Anzu',
       passwordHash: 'stored-password-hash',
       createdAt: new Date('2026-08-28T00:00:00.000Z'),
+      emailVerifiedAt: null,
     };
     const prismaFindUser = vi.fn(async () => storedUser);
     const findUserByEmail = createFindUserByEmailRepository(prismaFindUser);
@@ -80,6 +83,7 @@ describe('createFindUserByEmailRepository', () => {
         displayName: true,
         passwordHash: true,
         createdAt: true,
+        emailVerifiedAt: true,
       },
     });
   });
@@ -92,6 +96,7 @@ describe('createUpdateUserProfileRepository', () => {
       email: 'anzu@example.com',
       displayName: 'Anzu Prime',
       createdAt: new Date('2026-08-29T00:00:00.000Z'),
+      emailVerifiedAt: new Date('2026-08-28T00:00:00.000Z'),
     };
     const prismaUpdateUser = vi.fn(async () => updatedUser);
     const updateUserProfile =
@@ -111,6 +116,7 @@ describe('createUpdateUserProfileRepository', () => {
         email: true,
         displayName: true,
         createdAt: true,
+        emailVerifiedAt: true,
       },
     });
   });

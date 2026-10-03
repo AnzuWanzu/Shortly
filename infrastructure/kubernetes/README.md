@@ -28,6 +28,20 @@ kubectl get deployment,job,pod,service,pvc --namespace shortly
 
 Expected context: `kind-shortly`.
 
+Before deploying the API, provide hosted SMTP credentials and a random HMAC
+secret without committing either value:
+
+```bash
+kubectl create secret generic email-verification \
+  --namespace shortly \
+  --from-literal=SMTP_URL='smtps://USER:PASSWORD@SMTP_HOST:465' \
+  --from-literal=EMAIL_VERIFICATION_SECRET='REPLACE_WITH_32_PLUS_RANDOM_CHARACTERS'
+```
+
+For an existing Secret, use your normal secret-management workflow rather than
+placing credentials in a manifest. Mailpit belongs to the local Compose setup;
+it is not deployed to kind.
+
 If startup temporarily returns `Forbidden`, give the control plane a few
 seconds, then run:
 

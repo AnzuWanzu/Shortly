@@ -139,10 +139,15 @@ describe('authentication routes', () => {
   it('mounts user registration under /auth', async () => {
     const createdAt = new Date('2026-08-28T00:00:00.000Z');
     const registerUser = vi.fn<RegisterUser>(async (input) => ({
-      id: 'user-123',
-      email: input.email,
-      displayName: input.displayName,
-      createdAt,
+      user: {
+        id: 'user-123',
+        email: input.email,
+        displayName: input.displayName,
+        createdAt,
+        emailVerifiedAt: null,
+      },
+      verificationRequired: true,
+      emailSent: true,
     }));
     const registrationApp = createApp({
       webOrigin,
@@ -166,7 +171,10 @@ describe('authentication routes', () => {
         email: 'anzu@example.com',
         displayName: 'Anzu',
         createdAt: createdAt.toISOString(),
+        emailVerifiedAt: null,
       },
+      verificationRequired: true,
+      emailSent: true,
     });
   });
 

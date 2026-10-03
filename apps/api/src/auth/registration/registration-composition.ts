@@ -5,10 +5,19 @@ import { createUserRepository } from '../persistence/user-repository';
 
 type PrismaClient = ReturnType<typeof createPrismaClient>;
 
-export function composeRegistration(prisma: PrismaClient) {
+export function composeRegistration(
+  prisma: PrismaClient,
+  issueVerification: Parameters<
+    typeof createRegisterUser
+  >[0]['issueVerification'],
+) {
   const createUser = createUserRepository((args) => prisma.user.create(args));
 
   return {
-    registerUser: createRegisterUser({ hashPassword, createUser }),
+    registerUser: createRegisterUser({
+      hashPassword,
+      createUser,
+      issueVerification,
+    }),
   };
 }

@@ -29,7 +29,7 @@ const prisma = createPrismaClient(databaseUrl);
 const redis = createRedisClient(redisUrl, () => undefined);
 const redirectCache = createRedirectCache(redis, { ttlSeconds: 300 });
 const authDependencies = {
-  ...composeRegistration(prisma),
+  ...composeRegistration(prisma, async () => ({ emailSent: false })),
   ...composeLogin(prisma),
   ...composeSession(prisma),
 };
@@ -83,6 +83,10 @@ async function createLoggedInUser(label: string) {
   expect(registrationResponse.status).toBe(201);
 
   const user: { id: string } = registrationResponse.body.user;
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { emailVerifiedAt: new Date() },
+  });
   const agent = request.agent(app);
   const loginResponse = await agent
     .post('/auth/login')

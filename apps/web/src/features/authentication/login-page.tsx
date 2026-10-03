@@ -34,6 +34,9 @@ export function LoginPage() {
           setAuthenticatedUser(user);
           navigate('/', { replace: true });
         }}
+        onVerificationRequired={(email) => {
+          navigate('/verify-email', { state: { email } });
+        }}
       />
       <p className="mt-8 text-center text-sm text-muted">
         Need an account?{' '}

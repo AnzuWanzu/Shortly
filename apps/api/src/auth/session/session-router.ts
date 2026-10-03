@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import type { CookieOptions, Request, Response } from 'express';
 import {
+  EmailNotVerifiedError,
   InvalidCredentialsError,
   UnauthenticatedError,
 } from '../shared/auth-errors';
@@ -58,6 +59,16 @@ export function createSessionRouter(dependencies: SessionRouterDependencies) {
         response.status(401).json({
           error: {
             code: 'INVALID_CREDENTIALS',
+            message: error.message,
+          },
+        });
+        return;
+      }
+
+      if (error instanceof EmailNotVerifiedError) {
+        response.status(403).json({
+          error: {
+            code: 'EMAIL_NOT_VERIFIED',
             message: error.message,
           },
         });

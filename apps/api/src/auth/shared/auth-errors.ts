@@ -12,6 +12,13 @@ export class InvalidCredentialsError extends Error {
   }
 }
 
+export class EmailNotVerifiedError extends Error {
+  constructor() {
+    super('Verify your email before logging in');
+    this.name = 'EmailNotVerifiedError';
+  }
+}
+
 export class UnauthenticatedError extends Error {
   constructor() {
     super('Authentication is required');

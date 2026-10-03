@@ -41,6 +41,16 @@ spec:
                   key: POSTGRES_PASSWORD
             - name: DATABASE_URL
               value: postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)?schema=public
+            - name: SMTP_URL
+              valueFrom:
+                secretKeyRef:
+                  name: email-verification
+                  key: SMTP_URL
+            - name: EMAIL_VERIFICATION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: email-verification
+                  key: EMAIL_VERIFICATION_SECRET
           startupProbe:
             httpGet:
               path: /health

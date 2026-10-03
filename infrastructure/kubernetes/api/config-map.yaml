@@ -9,3 +9,4 @@ data:
   REDIS_URL: redis://redis:6379
   REDIRECT_CACHE_TTL_SECONDS: '300'
   COOKIE_SECURE: 'false'
+  EMAIL_FROM: Shortly <no-reply@shortly.test>

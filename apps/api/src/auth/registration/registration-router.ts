@@ -2,9 +2,11 @@ import { Router } from 'express';
 import { EmailAlreadyExistsError } from '../shared/auth-errors';
 import { registrationSchema } from './registration-schema';
 import type { RegistrationInput } from './registration-schema';
-import type { CreatedUser } from './registration-service';
+import type { RegistrationResult } from './registration-service';
 
-export type RegisterUser = (input: RegistrationInput) => Promise<CreatedUser>;
+export type RegisterUser = (
+  input: RegistrationInput,
+) => Promise<RegistrationResult>;
 
 type RegistrationRouterDependencies = {
   registerUser: RegisterUser;
@@ -33,9 +35,9 @@ export function createRegistrationRouter(
     }
 
     try {
-      const user = await dependencies.registerUser(parsedInput.data);
+      const result = await dependencies.registerUser(parsedInput.data);
 
-      response.status(201).json({ user });
+      response.status(201).json(result);
     } catch (error) {
       if (error instanceof EmailAlreadyExistsError) {
         response.status(409).json({

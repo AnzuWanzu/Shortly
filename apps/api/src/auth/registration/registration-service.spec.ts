@@ -19,12 +19,15 @@ describe('registerUser', () => {
         email: input.email,
         displayName: input.displayName,
         createdAt: new Date('2026-08-28T00:00:00.000Z'),
+        emailVerifiedAt: null,
       };
     });
+    const issueVerification = vi.fn(async () => ({ emailSent: true }));
 
     const registerUser = createRegisterUser({
       hashPassword,
       createUser,
+      issueVerification,
     });
 
     await registerUser(input);
@@ -36,5 +39,8 @@ describe('registerUser', () => {
       displayName: input.displayName,
       passwordHash: 'stored-password-hash',
     });
+    expect(issueVerification).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'user-123', emailVerifiedAt: null }),
+    );
   });
 });

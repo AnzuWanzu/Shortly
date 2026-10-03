@@ -9,7 +9,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-it('creates an account and sends the user to login', async () => {
+it('creates an account and sends the user to email verification', async () => {
   const user = userEvent.setup();
   const fetchMock = vi
     .fn()
@@ -33,6 +33,8 @@ it('creates an account and sends the user to login', async () => {
             displayName: 'Anzu',
             createdAt: '2026-08-30T00:00:00.000Z',
           },
+          verificationRequired: true,
+          emailSent: true,
         },
         201,
       ),
@@ -54,9 +56,11 @@ it('creates an account and sends the user to login', async () => {
   await user.click(screen.getByRole('button', { name: 'Create account' }));
 
   expect(
-    await screen.findByRole('heading', { name: 'Welcome back' }),
+    await screen.findByRole('heading', { name: 'Verify your email' }),
   ).toBeInTheDocument();
-  expect(screen.getByText('Account created')).toBeInTheDocument();
+  expect(screen.getByLabelText('Email address')).toHaveValue(
+    'anzu@example.com',
+  );
   expect(fetchMock).toHaveBeenLastCalledWith(
     '/auth/register',
     expect.objectContaining({

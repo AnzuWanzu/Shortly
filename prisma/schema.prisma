@@ -8,17 +8,34 @@ datasource db {
 }
 
 model User {
-  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email           String    @unique @db.VarChar(320)
-  passwordHash    String    @map("password_hash") @db.VarChar(255)
-  displayName     String    @map("display_name") @db.VarChar(100)
-  emailVerifiedAt DateTime? @map("email_verified_at") @db.Timestamptz(3)
-  sessions        Session[]
-  links           Link[]
-  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  id                    String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                 String                 @unique @db.VarChar(320)
+  passwordHash          String                 @map("password_hash") @db.VarChar(255)
+  displayName           String                 @map("display_name") @db.VarChar(100)
+  emailVerifiedAt       DateTime?              @map("email_verified_at") @db.Timestamptz(3)
+  emailVerificationCode EmailVerificationCode?
+  sessions              Session[]
+  links                 Link[]
+  createdAt             DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime               @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@map("users")
+}
+
+model EmailVerificationCode {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String   @unique @map("user_id") @db.Uuid
+  codeDigest     String   @map("code_digest") @db.VarChar(64)
+  expiresAt      DateTime @map("expires_at") @db.Timestamptz(3)
+  failedAttempts Int      @default(0) @map("failed_attempts")
+  lastSentAt     DateTime @map("last_sent_at") @db.Timestamptz(3)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@map("email_verification_codes")
 }
 
 model Link {

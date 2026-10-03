@@ -18,10 +18,10 @@ export function SignupPage() {
         Start shortening and managing the links you use most.
       </p>
       <SignupForm
-        onRegistered={() => {
-          navigate('/login', {
+        onRegistered={(email, emailSent) => {
+          navigate('/verify-email', {
             replace: true,
-            state: { message: 'Account created' },
+            state: { email, emailSent },
           });
         }}
       />
