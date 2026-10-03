@@ -45,7 +45,10 @@ FROM node:24-trixie-slim AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
 
-RUN corepack enable
+RUN apt-get update \
+  && apt-get upgrade --yes --no-install-recommends \
+  && rm -rf /var/lib/apt/lists/* \
+  && corepack enable
 
 COPY --from=build --chown=node:node /runtime/package.json ./package.json
 COPY --from=build --chown=node:node /runtime/pnpm-lock.yaml ./pnpm-lock.yaml
@@ -64,7 +67,9 @@ RUN pnpm install --prod --frozen-lockfile --config.auto-install-peers=false \
     /usr/local/bin/pnpm \
     /usr/local/bin/pnpx \
     /usr/local/bin/yarn \
-    /usr/local/bin/yarnpkg
+    /usr/local/bin/yarnpkg \
+    /root/.cache \
+    /root/.local/share/pnpm
 COPY --from=build --chown=node:node /workspace/dist/apps/api/main.js ./main.js
 COPY --from=build --chown=node:node /workspace/dist/apps/api/main.js.map ./main.js.map
 
