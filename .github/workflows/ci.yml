@@ -241,6 +241,22 @@ jobs:
           ignore-unfixed: false
           exit-code: 0
 
+      - name: Print vulnerability reports
+        if: always() && steps.build.outcome == 'success'
+        shell: bash
+        run: |
+          for report in \
+            "reports/${{ matrix.image }}-critical.txt" \
+            "reports/${{ matrix.image }}-fixable-high-critical.txt" \
+            "reports/${{ matrix.image }}-all-high.txt"
+          do
+            if [[ -s "$report" ]]; then
+              echo "::group::$report"
+              cat "$report"
+              echo "::endgroup::"
+            fi
+          done
+
       - name: Generate a CycloneDX software bill of materials
         if: always() && steps.build.outcome == 'success'
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
