@@ -161,6 +161,8 @@ jobs:
 
   images:
     name: Images / ${{ matrix.name }}
+    # Instantiate both required matrix checks even when a prerequisite fails.
+    if: ${{ always() }}
     needs: [quality, integration, secrets, dependency-review, codeql]
     runs-on: ubuntu-latest
     strategy:
@@ -174,6 +176,19 @@ jobs:
             image: shortly-web
             dockerfile: apps/web/Dockerfile
     steps:
+      - name: Require successful prerequisite gates
+        if: >-
+          ${{
+            needs.quality.result != 'success' ||
+            needs.integration.result != 'success' ||
+            needs.secrets.result != 'success' ||
+            needs.dependency-review.result != 'success' ||
+            needs.codeql.result != 'success'
+          }}
+        run: |
+          echo "::error::Image scanning was not run because a prerequisite failed, was skipped, or was cancelled. Check the prerequisite jobs."
+          exit 1
+
       - name: Check out the repository
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
@@ -225,6 +240,22 @@ jobs:
           severity: HIGH
           ignore-unfixed: false
           exit-code: 0
+
+      - name: Print vulnerability reports
+        if: always() && steps.build.outcome == 'success'
+        shell: bash
+        run: |
+          for report in \
+            "reports/${{ matrix.image }}-critical.txt" \
+            "reports/${{ matrix.image }}-fixable-high-critical.txt" \
+            "reports/${{ matrix.image }}-all-high.txt"
+          do
+            if [[ -s "$report" ]]; then
+              echo "::group::$report"
+              cat "$report"
+              echo "::endgroup::"
+            fi
+          done
 
       - name: Generate a CycloneDX software bill of materials
         if: always() && steps.build.outcome == 'success'
