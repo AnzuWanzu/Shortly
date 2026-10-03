@@ -62,4 +62,31 @@ describe('verificationRouter', () => {
     expect(response.status).toBe(202);
     expect(response.body).toEqual({ accepted: true });
   });
+
+  it('rate-limits repeated verification attempts from one client', async () => {
+    const verifyEmail = vi.fn(async () => undefined);
+    const app = createTestApp({
+      verifyEmail,
+      resendVerification: vi.fn(),
+    });
+
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      const response = await request(app)
+        .post('/auth/verify-email')
+        .set('x-shortly-csrf', '1')
+        .send({ email: 'anzu@example.com', code: '123456' });
+      expect(response.status).toBe(200);
+    }
+
+    const blockedResponse = await request(app)
+      .post('/auth/verify-email')
+      .set('x-shortly-csrf', '1')
+      .send({ email: 'anzu@example.com', code: '123456' });
+
+    expect(blockedResponse.status).toBe(429);
+    expect(blockedResponse.body.error.code).toBe(
+      'TOO_MANY_VERIFICATION_ATTEMPTS',
+    );
+    expect(verifyEmail).toHaveBeenCalledTimes(10);
+  });
 });

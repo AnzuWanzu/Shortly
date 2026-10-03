@@ -5,6 +5,7 @@ import {
   verifyEmailSchema,
 } from './verification-schema';
 import { EmailVerificationCodeInvalidError } from './verification-service';
+import { createVerificationRateLimits } from './verification-rate-limits';
 
 type VerificationRouterDependencies = {
   verifyEmail: (input: { email: string; code: string }) => Promise<void>;
@@ -15,44 +16,52 @@ export function createVerificationRouter(
   dependencies: VerificationRouterDependencies,
 ) {
   const router = Router();
+  const { verifyEmailRateLimit, resendVerificationRateLimit } =
+    createVerificationRateLimits();
 
-  router.post('/verify-email', requireCsrfHeader, async (request, response) => {
-    const parsedInput = verifyEmailSchema.safeParse(request.body);
-    if (!parsedInput.success) {
-      response.status(400).json({
-        error: {
-          code: 'INVALID_VERIFICATION_INPUT',
-          message: 'Verification data is invalid',
-        },
-      });
-      return;
-    }
-
-    try {
-      await dependencies.verifyEmail(parsedInput.data);
-      response.status(200).json({ verified: true });
-    } catch (error) {
-      if (error instanceof EmailVerificationCodeInvalidError) {
+  router.post(
+    '/verify-email',
+    verifyEmailRateLimit,
+    requireCsrfHeader,
+    async (request, response) => {
+      const parsedInput = verifyEmailSchema.safeParse(request.body);
+      if (!parsedInput.success) {
         response.status(400).json({
           error: {
-            code: 'INVALID_VERIFICATION_CODE',
-            message: error.message,
+            code: 'INVALID_VERIFICATION_INPUT',
+            message: 'Verification data is invalid',
           },
         });
         return;
       }
 
-      response.status(500).json({
-        error: {
-          code: 'INTERNAL_ERROR',
-          message: 'Unable to verify email',
-        },
-      });
-    }
-  });
+      try {
+        await dependencies.verifyEmail(parsedInput.data);
+        response.status(200).json({ verified: true });
+      } catch (error) {
+        if (error instanceof EmailVerificationCodeInvalidError) {
+          response.status(400).json({
+            error: {
+              code: 'INVALID_VERIFICATION_CODE',
+              message: error.message,
+            },
+          });
+          return;
+        }
+
+        response.status(500).json({
+          error: {
+            code: 'INTERNAL_ERROR',
+            message: 'Unable to verify email',
+          },
+        });
+      }
+    },
+  );
 
   router.post(
     '/resend-verification',
+    resendVerificationRateLimit,
     requireCsrfHeader,
     async (request, response) => {
       const parsedInput = resendVerificationSchema.safeParse(request.body);
