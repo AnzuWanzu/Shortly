@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kong
+  namespace: shortly
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: kong
+
+  template:
+    metadata:
+      labels:
+        app: kong
+
+    spec:
+      containers:
+        - name: kong
+          image: kong/kong-gateway:3.15.0.5
+          imagePullPolicy: IfNotPresent
+
+          env:
+            - name: KONG_NGINX_WORKER_PROCESSES
+              value: '1'
+            - name: KONG_DATABASE
+              value: 'off'
+
+            - name: KONG_DECLARATIVE_CONFIG
+              value: /kong/declarative/kong.yaml
+
+            - name: KONG_PROXY_LISTEN
+              value: 0.0.0.0:8000
+
+            - name: KONG_ADMIN_LISTEN
+              value: 'off'
+
+            - name: KONG_STATUS_LISTEN
+              value: 0.0.0.0:8100
+
+          ports:
+            - name: proxy
+              containerPort: 8000
+
+            - name: status
+              containerPort: 8100
+
+          volumeMounts:
+            - name: kong-config
+              mountPath: /kong/declarative
+              readOnly: true
+
+          startupProbe:
+            httpGet:
+              path: /status
+              port: status
+            periodSeconds: 2
+            failureThreshold: 30
+
+          readinessProbe:
+            httpGet:
+              path: /status
+              port: status
+            periodSeconds: 5
+            timeoutSeconds: 3
+
+          livenessProbe:
+            httpGet:
+              path: /status
+              port: status
+            periodSeconds: 10
+            timeoutSeconds: 3
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+      volumes:
+        - name: kong-config
+          configMap:
+            name: kong-config

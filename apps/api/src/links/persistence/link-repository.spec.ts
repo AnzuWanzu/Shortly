@@ -1,0 +1,128 @@
+import { vi } from 'vitest';
+import {
+  LinkNotFoundError,
+  SlugAlreadyExistsError,
+} from '../shared/link-errors';
+import {
+  createLinkRecordRepository,
+  createListOwnedLinksRepository,
+  createDeleteOwnedLinkRepository,
+  createFindRedirectBySlugRepository,
+} from './link-repository';
+
+describe('link repositories', () => {
+  it('creates a link with the authenticated owner ID', async () => {
+    const created = {
+      id: '8ef22366-a9ce-4ebd-8c11-59779bcd66f4',
+      slug: 'abc123XY',
+      originalUrl: 'https://example.com/long',
+      userId: 'user-123',
+      createdAt: new Date('2026-08-29T00:00:00.000Z'),
+    };
+    const prismaCreateLink = vi.fn(async () => created);
+    const createLinkRecord = createLinkRecordRepository(prismaCreateLink);
+
+    await expect(
+      createLinkRecord({
+        slug: created.slug,
+        originalUrl: created.originalUrl,
+        userId: created.userId,
+      }),
+    ).resolves.toEqual(created);
+    expect(prismaCreateLink).toHaveBeenCalledWith({
+      data: {
+        slug: created.slug,
+        originalUrl: created.originalUrl,
+        userId: created.userId,
+      },
+      select: {
+        id: true,
+        slug: true,
+        originalUrl: true,
+        userId: true,
+        createdAt: true,
+      },
+    });
+  });
+
+  it('translates a unique slug collision', async () => {
+    const prismaCreateLink = vi.fn(async () => {
+      throw Object.assign(new Error('Unique constraint'), { code: 'P2002' });
+    });
+    const createLinkRecord = createLinkRecordRepository(prismaCreateLink);
+
+    await expect(
+      createLinkRecord({
+        slug: 'abc123XY',
+        originalUrl: 'https://example.com/long',
+        userId: 'user-123',
+      }),
+    ).rejects.toBeInstanceOf(SlugAlreadyExistsError);
+  });
+
+  it('lists only links belonging to the authenticated user', async () => {
+    const prismaFindLinks = vi.fn(async () => []);
+    const listOwnedLinks = createListOwnedLinksRepository(prismaFindLinks);
+
+    await listOwnedLinks('user-123');
+
+    expect(prismaFindLinks).toHaveBeenCalledWith({
+      where: { userId: 'user-123' },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        slug: true,
+        originalUrl: true,
+        userId: true,
+        createdAt: true,
+      },
+    });
+  });
+
+  it('deletes only when both the link and authenticated owner match', async () => {
+    const prismaDeleteLink = vi.fn(async () => ({ slug: 'abc123XY' }));
+    const deleteOwnedLink = createDeleteOwnedLinkRepository(prismaDeleteLink);
+
+    await expect(
+      deleteOwnedLink({
+        linkId: '8ef22366-a9ce-4ebd-8c11-59779bcd66f4',
+        userId: 'user-123',
+      }),
+    ).resolves.toEqual({ slug: 'abc123XY' });
+
+    expect(prismaDeleteLink).toHaveBeenCalledWith({
+      where: {
+        id: '8ef22366-a9ce-4ebd-8c11-59779bcd66f4',
+        userId: 'user-123',
+      },
+      select: { slug: true },
+    });
+  });
+
+  it('returns the same not-found error for missing and cross-user links', async () => {
+    const prismaDeleteLink = vi.fn(async () => {
+      throw { code: 'P2025' };
+    });
+    const deleteOwnedLink = createDeleteOwnedLinkRepository(prismaDeleteLink);
+
+    await expect(
+      deleteOwnedLink({
+        linkId: '8ef22366-a9ce-4ebd-8c11-59779bcd66f4',
+        userId: 'different-user',
+      }),
+    ).rejects.toBeInstanceOf(LinkNotFoundError);
+  });
+
+  it('finds only the destination needed for a public redirect', async () => {
+    const destination = { originalUrl: 'https://example.com/articles/42' };
+    const prismaFindRedirect = vi.fn(async () => destination);
+    const findRedirectBySlug =
+      createFindRedirectBySlugRepository(prismaFindRedirect);
+
+    await expect(findRedirectBySlug('abc123XY')).resolves.toEqual(destination);
+    expect(prismaFindRedirect).toHaveBeenCalledWith({
+      where: { slug: 'abc123XY' },
+      select: { originalUrl: true },
+    });
+  });
+});

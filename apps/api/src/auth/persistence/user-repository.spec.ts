@@ -1,0 +1,123 @@
+import { vi } from 'vitest';
+import { EmailAlreadyExistsError } from '../shared/auth-errors';
+import {
+  createFindUserByEmailRepository,
+  createUserRepository,
+  createUpdateUserProfileRepository,
+} from './user-repository';
+
+describe('createUserRepository', () => {
+  it('passes user data and a safe field selection to Prisma', async () => {
+    const input = {
+      email: 'anzu@example.com',
+      displayName: 'Anzu',
+      passwordHash: 'stored-password-hash',
+    };
+
+    const prismaCreateUser = vi.fn(async () => {
+      return {
+        id: 'user-123',
+        email: input.email,
+        displayName: input.displayName,
+        createdAt: new Date('2026-08-28T00:00:00.000Z'),
+        emailVerifiedAt: null,
+      };
+    });
+
+    const createUser = createUserRepository(prismaCreateUser);
+
+    await createUser(input);
+
+    expect(prismaCreateUser).toHaveBeenCalledWith({
+      data: input,
+      select: {
+        id: true,
+        email: true,
+        displayName: true,
+        createdAt: true,
+        emailVerifiedAt: true,
+      },
+    });
+  });
+
+  it('translates a Prisma unique constraint into an email conflict', async () => {
+    const prismaError = Object.assign(new Error('Unique constraint failed'), {
+      code: 'P2002',
+    });
+    const prismaCreateUser = vi.fn(async () => {
+      throw prismaError;
+    });
+    const createUser = createUserRepository(prismaCreateUser);
+
+    await expect(
+      createUser({
+        email: 'anzu@example.com',
+        displayName: 'Anzu',
+        passwordHash: 'stored-password-hash',
+      }),
+    ).rejects.toBeInstanceOf(EmailAlreadyExistsError);
+  });
+});
+
+describe('createFindUserByEmailRepository', () => {
+  it('looks up a normalized email and deliberately selects the password hash', async () => {
+    const storedUser = {
+      id: 'user-123',
+      email: 'anzu@example.com',
+      displayName: 'Anzu',
+      passwordHash: 'stored-password-hash',
+      createdAt: new Date('2026-08-28T00:00:00.000Z'),
+      emailVerifiedAt: null,
+    };
+    const prismaFindUser = vi.fn(async () => storedUser);
+    const findUserByEmail = createFindUserByEmailRepository(prismaFindUser);
+
+    await expect(findUserByEmail(storedUser.email)).resolves.toEqual(
+      storedUser,
+    );
+    expect(prismaFindUser).toHaveBeenCalledWith({
+      where: { email: storedUser.email },
+      select: {
+        id: true,
+        email: true,
+        displayName: true,
+        passwordHash: true,
+        createdAt: true,
+        emailVerifiedAt: true,
+      },
+    });
+  });
+});
+
+describe('createUpdateUserProfileRepository', () => {
+  it('updates by authenticated user ID and selects only safe fields', async () => {
+    const updatedUser = {
+      id: 'user-123',
+      email: 'anzu@example.com',
+      displayName: 'Anzu Prime',
+      createdAt: new Date('2026-08-29T00:00:00.000Z'),
+      emailVerifiedAt: new Date('2026-08-28T00:00:00.000Z'),
+    };
+    const prismaUpdateUser = vi.fn(async () => updatedUser);
+    const updateUserProfile =
+      createUpdateUserProfileRepository(prismaUpdateUser);
+
+    await expect(
+      updateUserProfile({
+        userId: updatedUser.id,
+        displayName: updatedUser.displayName,
+      }),
+    ).resolves.toEqual(updatedUser);
+    expect(prismaUpdateUser).toHaveBeenCalledWith({
+      where: { id: updatedUser.id },
+      data: { displayName: updatedUser.displayName },
+      select: {
+        id: true,
+        email: true,
+        displayName: true,
+        createdAt: true,
+        emailVerifiedAt: true,
+      },
+    });
+  });
+});
