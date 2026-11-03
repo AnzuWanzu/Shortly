@@ -140,6 +140,27 @@ describe('POST /auth/login', () => {
 
     expect(response.headers['set-cookie'][0]).toContain('Secure');
   });
+
+  it('rate limits repeated login attempts', async () => {
+    const app = createTestApp(createDependencies());
+
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      const response = await request(app)
+        .post('/auth/login')
+        .set(CSRF_HEADER_NAME, CSRF_HEADER_VALUE)
+        .send({ email: 'anzu@example.com', password: 'password' });
+
+      expect(response.status).toBe(200);
+    }
+
+    const blockedResponse = await request(app)
+      .post('/auth/login')
+      .set(CSRF_HEADER_NAME, CSRF_HEADER_VALUE)
+      .send({ email: 'anzu@example.com', password: 'password' });
+
+    expect(blockedResponse.status).toBe(429);
+    expect(blockedResponse.body.error.code).toBe('TOO_MANY_LOGIN_ATTEMPTS');
+  });
 });
 
 describe('GET /auth/me', () => {
