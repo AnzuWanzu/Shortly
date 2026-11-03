@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import type { CookieOptions, Request, Response } from 'express';
+import { parse as parseCookieHeader } from 'cookie';
 import { rateLimit } from 'express-rate-limit';
 import {
   EmailNotVerifiedError,
@@ -176,6 +177,6 @@ export function requireCsrfHeader(
 }
 
 export function readSessionCookie(request: Request): string | undefined {
-  const value: unknown = request.cookies?.[SESSION_COOKIE_NAME];
-  return typeof value === 'string' ? value : undefined;
+  const cookies = parseCookieHeader(request.headers.cookie ?? '');
+  return cookies[SESSION_COOKIE_NAME];
 }

@@ -1,4 +1,3 @@
-import cookieParser from 'cookie-parser';
 import express from 'express';
 import request from 'supertest';
 import { vi } from 'vitest';
@@ -57,7 +56,6 @@ function createDependencies(
 function createTestApp(dependencies: ReturnType<typeof createDependencies>) {
   const app = express();
   app.use(express.json());
-  app.use(cookieParser());
   app.use('/links', createLinkRouter(dependencies));
   return app;
 }

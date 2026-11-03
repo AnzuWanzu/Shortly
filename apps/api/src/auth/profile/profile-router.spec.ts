@@ -1,4 +1,3 @@
-import cookieParser from 'cookie-parser';
 import express from 'express';
 import request from 'supertest';
 import { vi } from 'vitest';
@@ -25,7 +24,6 @@ function createTestApp(
 ) {
   const app = express();
   app.use(express.json());
-  app.use(cookieParser());
   app.use('/auth', createProfileRouter({ authenticateSession, updateProfile }));
   return app;
 }
