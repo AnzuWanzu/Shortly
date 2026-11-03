@@ -1,0 +1,9 @@
+name: Shortly CodeQL configuration
+
+# Unit-test harnesses deliberately mount routers without the complete app-level
+# security stack. Scan deployed source while excluding those non-runtime files.
+paths-ignore:
+  - '**/*.spec.ts'
+  - '**/*.test.ts'
+  - '**/*.spec.tsx'
+  - '**/*.test.tsx'

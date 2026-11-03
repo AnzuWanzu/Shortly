@@ -86,6 +86,11 @@ export function createApp({
   );
 
   app.use(express.json({ limit: '10kb' }));
+
+  // Shortly rejects credentialed cross-site writes by requiring a non-simple
+  // x-shortly-csrf header while CORS grants credentials only to webOrigin.
+  // CodeQL does not model this custom header-plus-CORS protection.
+  // codeql[js/missing-token-validation]
   app.use(cookieParser());
 
   //Routes:
