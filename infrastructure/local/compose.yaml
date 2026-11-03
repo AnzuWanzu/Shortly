@@ -1,0 +1,118 @@
+name: shortly-local
+
+services:
+  postgres:
+    image: postgres:17.11-bookworm
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        ['CMD-SHELL', 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  redis:
+    image: redis:8.2.9-bookworm
+    ports:
+      - '${REDIS_PORT:-6767}:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  mailpit:
+    image: ghcr.io/axllent/mailpit:v1.31.3@sha256:13de4ffbd28f3089be6dff32afbc8210edb5a593d738fa877ae7272cc73aeb67
+    ports:
+      - '${MAILPIT_SMTP_PORT:-1025}:1025'
+      - '${MAILPIT_UI_PORT:-8025}:8025'
+  migrate:
+    build:
+      context: ../..
+      dockerfile: apps/api/Dockerfile
+      target: migrate
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+    depends_on:
+      postgres:
+        condition: service_healthy
+  api:
+    build:
+      context: ../..
+      dockerfile: apps/api/Dockerfile
+      target: runtime
+    ports:
+      - '${API_PORT:-3333}:3333'
+    environment:
+      PORT: 3333
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:4200}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+      REDIS_URL: redis://redis:6379
+      REDIRECT_CACHE_TTL_SECONDS: ${REDIRECT_CACHE_TTL_SECONDS:-300}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      SMTP_URL: smtp://mailpit:1025
+      EMAIL_FROM: ${EMAIL_FROM:-Shortly <no-reply@shortly.test>}
+      EMAIL_VERIFICATION_SECRET: ${EMAIL_VERIFICATION_SECRET}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3333/ready').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+  kong:
+    build:
+      context: ../..
+      dockerfile: infrastructure/local/kong.Dockerfile
+    environment:
+      KONG_DATABASE: 'off'
+      KONG_DECLARATIVE_CONFIG: /kong/declarative/kong.yaml
+      KONG_NGINX_WORKER_PROCESSES: '1'
+      KONG_PROXY_LISTEN: 0.0.0.0:8000
+      KONG_ADMIN_LISTEN: 'off'
+      KONG_STATUS_LISTEN: 0.0.0.0:8100
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'kong', 'health']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+  web:
+    build:
+      context: ../..
+      dockerfile: apps/web/Dockerfile
+      target: runtime
+    ports:
+      - '${WEB_PORT:-4200}:8080'
+    depends_on:
+      kong:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '--quiet', '--spider', 'http://127.0.0.1:8080/']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+volumes:
+  postgres-data:

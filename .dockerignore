@@ -1,0 +1,13 @@
+.git
+.nx
+.scratch
+.env
+.env.*
+!.env.example
+.vscode
+coverage
+dist
+node_modules
+*.log
+*.md
+!README.md
