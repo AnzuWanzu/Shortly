@@ -4,6 +4,36 @@ An in-progress URL-shortener infrastructure learning project.
 
 Private learning notes and any onboarding-derived material are kept outside this repository.
 
+## Product tour
+
+Shortly turns long URLs into shareable short links, keeps them in a private
+workspace, and redirects visitors through a PostgreSQL-backed service with a
+Redis cache. Accounts use password authentication and email verification.
+
+### Shorten and revisit links
+
+![Shortly dashboard showing three recently shortened links](docs/screenshots/shortly-dashboard.png)
+
+### Search and manage saved links
+
+![Shortly link library with copy, open, and delete actions](docs/screenshots/shortly-links.png)
+
+### Verify new accounts
+
+New accounts receive a six-digit, time-limited email code before they can log
+in. Local development messages are delivered to Mailpit.
+
+<table>
+  <tr>
+    <td><img src="docs/screenshots/shortly-signup.png" alt="Shortly account creation page"></td>
+    <td><img src="docs/screenshots/shortly-verification.png" alt="Shortly email verification page"></td>
+  </tr>
+</table>
+
+### Update the account profile
+
+![Shortly profile and session settings](docs/screenshots/shortly-settings.png)
+
 ## First-time setup
 
 Use Node.js 24, pnpm 11.19.0 (the version in `package.json`), and Docker with
@@ -257,7 +287,11 @@ Format only the files you changed, for example:
 pnpm exec prettier --write README.md package.json
 ```
 
-## CI and security gates
+## CI and delivery status
+
+Shortly currently has **continuous integration (CI), not continuous delivery
+(CD)**. GitHub Actions verifies each change and builds test images, but it does
+not publish those images or deploy the application to an environment.
 
 Pull requests and pushes targeting `staging` or `main` run the workflow in
 `.github/workflows/ci.yml`. The container-image jobs begin only after every
@@ -271,19 +305,37 @@ dependency review ──────────┤
 CodeQL ─────────────────────┘
 ```
 
-The required checks are:
+| Stage                              | What it proves                                                            | Merge behavior                                                    |
+| ---------------------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `Quality / affected`               | Changed Nx projects format, lint, typecheck, test, and build successfully | Blocks on failure                                                 |
+| `Integration / PostgreSQL + Redis` | Migrations and API behavior work against real service containers          | Blocks on failure                                                 |
+| `Security / secrets`               | Git history contains no detected committed secrets                        | Blocks on failure                                                 |
+| `Security / dependency review`     | A pull request adds no high or critical vulnerable dependency             | Blocks on failure                                                 |
+| `Security / CodeQL`                | JavaScript and TypeScript analysis completes and uploads results          | Workflow blocks if analysis fails; repository rules handle alerts |
+| `Images / API` and `Images / Web`  | Runtime images build and pass the configured Trivy policy                 | Run only after the earlier gates pass                             |
 
-- `Quality / affected` — formatting plus affected lint, typecheck, tests, and builds.
-- `Integration / PostgreSQL + Redis` — migrations and real service integration tests.
-- `Security / secrets` — hard-coded secret detection across Git history.
-- `Security / dependency review` — newly introduced high or critical dependency risk.
-- `Security / CodeQL` — JavaScript and TypeScript static analysis.
-- `Images / API` and `Images / Web` — runtime image construction and scanning.
+The workflow uses:
+
+- **Nx affected** to run project checks only where the calculated Git range changed.
+- **PostgreSQL 17 and Redis 8 service containers** for isolated integration tests.
+- **Gitleaks** for committed-secret detection.
+- **GitHub dependency review** for newly introduced package vulnerabilities.
+- **CodeQL** for JavaScript and TypeScript static analysis.
+- **Trivy** for API and web runtime-image vulnerability scans.
+- **CycloneDX SBOMs** to record the components found in each image.
 
 Trivy blocks every critical image vulnerability and every fixable high or
 critical vulnerability. Unfixed high findings are reported without blocking.
 The workflow retains compact reports and CycloneDX software bills of materials
 for 14 days; it does not publish images or upload image archives.
+
+### What CD would add
+
+A future delivery workflow would publish approved images to a registry, inject
+environment-specific configuration, run database migrations, deploy the chosen
+release, perform smoke checks, and provide a rollback path. Those steps are
+intentionally outside the current workflow, so a green CI run does not mean a
+release was deployed.
 
 Run the quality side locally with:
 

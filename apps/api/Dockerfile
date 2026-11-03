@@ -15,6 +15,7 @@ RUN pnpm nx build api
 RUN pnpm --dir dist/apps/api pkg set dependencies.tslib=2.8.1 \
   && mkdir /runtime \
   && cp dist/apps/api/package.json dist/apps/api/pnpm-lock.yaml /runtime/ \
+  && cp pnpm-workspace.yaml /runtime/ \
   && cd /runtime \
   && pnpm install --lockfile-only --config.auto-install-peers=false
 
@@ -52,7 +53,7 @@ RUN apt-get update \
 
 COPY --from=build --chown=node:node /runtime/package.json ./package.json
 COPY --from=build --chown=node:node /runtime/pnpm-lock.yaml ./pnpm-lock.yaml
-COPY --from=build --chown=node:node /workspace/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=build --chown=node:node /runtime/pnpm-workspace.yaml ./pnpm-workspace.yaml
 RUN pnpm install --prod --frozen-lockfile --config.auto-install-peers=false \
   && pnpm pkg delete type \
   && corepack disable \
