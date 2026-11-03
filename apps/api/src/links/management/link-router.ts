@@ -1,4 +1,5 @@
 import { Router, type Request, type Response } from 'express';
+import { rateLimit } from 'express-rate-limit';
 import { UnauthenticatedError } from '../../auth/shared/auth-errors';
 import {
   readSessionCookie,
@@ -27,37 +28,48 @@ type LinkRouterDependencies = {
 
 export function createLinkRouter(dependencies: LinkRouterDependencies) {
   const router = Router();
-
-  router.post('/', requireCsrfHeader, async (request, response) => {
-    try {
-      const user = await authenticateRequest(request, dependencies);
-      const parsedInput = createLinkSchema.safeParse(request.body);
-
-      if (!parsedInput.success) {
-        response.status(400).json({
-          error: {
-            code: 'INVALID_LINK_INPUT',
-            message: 'Link data is invalid',
-            issues: parsedInput.error.issues.map((issue) => ({
-              path: issue.path.join('.'),
-              message: issue.message,
-            })),
-          },
-        });
-        return;
-      }
-
-      const link = await dependencies.createOwnedLink({
-        ...parsedInput.data,
-        userId: user.id,
-      });
-      response.status(201).json({ link });
-    } catch (error) {
-      sendLinkError(response, error, 'Unable to create link');
-    }
+  const linkRateLimit = rateLimit({
+    windowMs: 60 * 1000,
+    limit: 100,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
   });
 
-  router.get('/', async (request, response) => {
+  router.post(
+    '/',
+    linkRateLimit,
+    requireCsrfHeader,
+    async (request, response) => {
+      try {
+        const user = await authenticateRequest(request, dependencies);
+        const parsedInput = createLinkSchema.safeParse(request.body);
+
+        if (!parsedInput.success) {
+          response.status(400).json({
+            error: {
+              code: 'INVALID_LINK_INPUT',
+              message: 'Link data is invalid',
+              issues: parsedInput.error.issues.map((issue) => ({
+                path: issue.path.join('.'),
+                message: issue.message,
+              })),
+            },
+          });
+          return;
+        }
+
+        const link = await dependencies.createOwnedLink({
+          ...parsedInput.data,
+          userId: user.id,
+        });
+        response.status(201).json({ link });
+      } catch (error) {
+        sendLinkError(response, error, 'Unable to create link');
+      }
+    },
+  );
+
+  router.get('/', linkRateLimit, async (request, response) => {
     try {
       const user = await authenticateRequest(request, dependencies);
       const links = await dependencies.listOwnedLinks(user.id);
@@ -67,24 +79,29 @@ export function createLinkRouter(dependencies: LinkRouterDependencies) {
     }
   });
 
-  router.delete('/:id', requireCsrfHeader, async (request, response) => {
-    try {
-      const user = await authenticateRequest(request, dependencies);
-      const parsedLinkId = linkIdSchema.safeParse(request.params['id']);
+  router.delete(
+    '/:id',
+    linkRateLimit,
+    requireCsrfHeader,
+    async (request, response) => {
+      try {
+        const user = await authenticateRequest(request, dependencies);
+        const parsedLinkId = linkIdSchema.safeParse(request.params['id']);
 
-      if (!parsedLinkId.success) {
-        throw new LinkNotFoundError();
+        if (!parsedLinkId.success) {
+          throw new LinkNotFoundError();
+        }
+
+        await dependencies.deleteOwnedLink({
+          linkId: parsedLinkId.data,
+          userId: user.id,
+        });
+        response.status(204).send();
+      } catch (error) {
+        sendLinkError(response, error, 'Unable to delete link');
       }
-
-      await dependencies.deleteOwnedLink({
-        linkId: parsedLinkId.data,
-        userId: user.id,
-      });
-      response.status(204).send();
-    } catch (error) {
-      sendLinkError(response, error, 'Unable to delete link');
-    }
-  });
+    },
+  );
 
   return router;
 }
